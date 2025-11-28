@@ -1,0 +1,12 @@
+oilsticker_cpp/
+├─ CMakeLists.txt
+├─ main.cpp
+├─ include/
+│  ├─ OilLabelGUI.hpp
+│  └─ LabelPreview.hpp
+├─ src/
+│  ├─ OilLabelGUI.cpp
+│  └─ LabelPreview.cpp
+└─ resources/
+   └─ oil_label_bg.png   (place your 406x406 PNG here)
+

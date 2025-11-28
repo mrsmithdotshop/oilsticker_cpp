@@ -1,0 +1,2 @@
+set(__QT_DEPLOY_TARGET_oilstickergui_FILE /Users/rasmith/Documents/oilsticker_cpp/oilstickergui)
+set(__QT_DEPLOY_TARGET_oilstickergui_TYPE EXECUTABLE)

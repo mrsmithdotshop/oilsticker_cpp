@@ -1,0 +1,5 @@
+/Users/rasmith/Documents/oilsticker_cpp/CMakeFiles/oilstickergui.dir
+/Users/rasmith/Documents/oilsticker_cpp/CMakeFiles/edit_cache.dir
+/Users/rasmith/Documents/oilsticker_cpp/CMakeFiles/rebuild_cache.dir
+/Users/rasmith/Documents/oilsticker_cpp/CMakeFiles/oilstickergui_autogen_timestamp_deps.dir
+/Users/rasmith/Documents/oilsticker_cpp/CMakeFiles/oilstickergui_autogen.dir
