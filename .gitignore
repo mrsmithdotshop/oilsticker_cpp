@@ -1,9 +1,9 @@
-.qt
-.vscode
-build
-CMakeFiles
-OilStickerApp
-oilstickergui_autogen
+.qt/
+.vscode/
+build/
+CMakeFiles/
+OilStickerApp/
+oilstickergui_autogen/
 cmake_install.cmake
 CMakeCache.txt
 CMakeLists.txt
@@ -12,3 +12,4 @@ Makefile
 OilStickerApp.dmg
 oilstickergui
 package_mac_app.sh
+.gitignore
