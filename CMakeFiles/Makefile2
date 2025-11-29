@@ -84,8 +84,8 @@ clean: CMakeFiles/oilstickergui_autogen.dir/clean
 # Target rules for target CMakeFiles/oilstickergui.dir
 
 # All Build rule for target.
-CMakeFiles/oilstickergui.dir/all: CMakeFiles/oilstickergui_autogen_timestamp_deps.dir/all
 CMakeFiles/oilstickergui.dir/all: CMakeFiles/oilstickergui_autogen.dir/all
+CMakeFiles/oilstickergui.dir/all: CMakeFiles/oilstickergui_autogen_timestamp_deps.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/oilstickergui.dir/build.make CMakeFiles/oilstickergui.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/oilstickergui.dir/build.make CMakeFiles/oilstickergui.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/rasmith/Documents/oilsticker_cpp/CMakeFiles --progress-num=1,2,3,4,5,6 "Built target oilstickergui"
