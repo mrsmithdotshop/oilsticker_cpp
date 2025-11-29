@@ -7,6 +7,10 @@ oilsticker_cpp/
 ├─ src/
 │  ├─ OilLabelGUI.cpp
 │  └─ LabelPreview.cpp
-└─ resources/
-   └─ oil_label_bg.png   (place your 406x406 PNG here)
-
+├─ resources/
+│  └─ oil_label_bg.png   (place your 406x406 PNG here)
+└─ samples/
+   ├─ blanklabel.png
+   ├─ blanklabel.zpl
+   ├─ LOGO.zpl
+   └─ oilLabel.png
