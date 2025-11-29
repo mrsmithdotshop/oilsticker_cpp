@@ -36,7 +36,7 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
 
     printerName = settings.value("printer", "").toString();
     defaultMiles = settings.value("defaultMiles", 5000).toInt();
-    templateName = settings.value("template", "default.zpl").toString();
+    templateName = settings.value("template", "DEFAULT.ZPL").toString();
 
     QString savedBg = settings.value("background", "").toString();
     QString defaultResource = ":/resources/oil_label_bg.png";
@@ -109,7 +109,7 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     // Oil type
     QLabel *oilTypeLabel = new QLabel("Oil Brand and Grade:");
     oilTypeInput = new QLineEdit();
-    oilTypeInput->setPlaceholderText("e.g. MOBILE1 0W40");
+    oilTypeInput->setPlaceholderText("e.g. MOBIL1 0W40");
     oilTypeInput->setFixedWidth(270);
 
     // Oil type row
@@ -221,6 +221,8 @@ void OilLabelGUI::printLabel()
     }
 
     int nextMileage = mileage + interval;
+    QString formattedMileage = QLocale(QLocale::English).toString(nextMileage);
+
     QString nextDate = QDate::currentDate().addMonths(6).toString("MM/dd/yy");
 
     QString oilType = oilTypeInput->text().trimmed();
@@ -239,7 +241,7 @@ void OilLabelGUI::printLabel()
     ).arg(templateName)
      .arg(oilType)
      .arg(today)
-     .arg(nextMileage)
+     .arg(formattedMileage)
      .arg(nextDate);
 
     if (printerName.isEmpty()) {
@@ -364,14 +366,14 @@ void OilLabelGUI::selectTemplate()
     QString input = QInputDialog::getText(
         this,
         "Select ZPL Template",
-        "Template Name (include extension, e.g., template.zpl):",
+        "Template Name (include extension, e.g., TEMPLATE.ZPL):",
         QLineEdit::Normal,
         templateName,
         &ok
     );
 
     if (ok && !input.isEmpty()) {
-        templateName = input;
+        templateName = input.toUpper();   // Capitalize before storing
         QSettings settings("MyCompany", "OilStickerApp");
         settings.setValue("template", templateName);
     }
