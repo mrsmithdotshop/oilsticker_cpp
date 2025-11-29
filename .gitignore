@@ -12,4 +12,3 @@ Makefile
 OilStickerApp.dmg
 oilstickergui
 package_mac_app.sh
-.gitignore
