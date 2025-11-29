@@ -36,7 +36,7 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
 
     printerName = settings.value("printer", "").toString();
     defaultMiles = settings.value("defaultMiles", 5000).toInt();
-    templateName = settings.value("template", "LOGO.ZPL").toString();
+    templateName = settings.value("template", "default.zpl").toString();
 
     QString savedBg = settings.value("background", "").toString();
     QString defaultResource = ":/resources/oil_label_bg.png";
@@ -227,10 +227,10 @@ void OilLabelGUI::printLabel()
     QString zpl = QString(
         "^XA\n"
         "^XF%1^FS\n"
-        "^FO25,275^A0N,15^FD%2^FS\n"   // oil type
-        "^FO325,275^A0N,15^FD%3^FS\n"  // today's date
-        "^FO25,335^FD%4^FS\n"           // next mileage
-        "^FO245,335^FD%5^FS\n"          // next date
+        "^FN2^FD%2^FS\n" // oil type
+        "^FN3^FD%3^FS\n" // today's date
+        "^FN4^FD%4^FS\n" // next mileage
+        "^FN5^FD%5^FS\n" // next date
         "^XZ"
     ).arg(templateName)
      .arg(oilType)
