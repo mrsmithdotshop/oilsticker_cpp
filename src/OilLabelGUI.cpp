@@ -71,6 +71,10 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     connect(changeTemplateAct, &QAction::triggered, this, &OilLabelGUI::selectTemplate);
     settingsMenu->addAction(changeTemplateAct);
 
+    QAction *resetSettingsAct = new QAction("Reset All Settings", this);
+    settingsMenu->addAction(resetSettingsAct);
+    connect(resetSettingsAct, &QAction::triggered, this, &OilLabelGUI::resetSettings);
+
     // -----------------------------
     // Layouts
     // -----------------------------
@@ -370,5 +374,35 @@ void OilLabelGUI::selectTemplate()
         templateName = input;
         QSettings settings("MyCompany", "OilStickerApp");
         settings.setValue("template", templateName);
+    }
+}
+
+// -----------------------------
+// Reset Qsettings
+// -----------------------------
+void OilLabelGUI::resetSettings()
+{
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this,
+        "Reset Settings",
+        "Are you sure you want to clear all saved settings?",
+        QMessageBox::Yes | QMessageBox::No
+    );
+
+    if (reply == QMessageBox::Yes) {
+        QSettings settings("MyCompany", "OilStickerApp");
+        settings.clear();
+        settings.sync();
+
+        QMessageBox::information(this, "Settings Reset",
+                                 "All settings have been cleared.\n"
+                                 "Please restart the application.");
+
+        // Optional: immediately reload defaults in the running app:
+        //  - reset printerName, backgroundPath, templateName, etc.
+        //  - OR simply exit and let user restart
+
+        // Example forced exit:
+        qApp->quit();
     }
 }

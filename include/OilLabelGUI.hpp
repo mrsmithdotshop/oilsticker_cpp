@@ -21,6 +21,7 @@ private slots:
     void selectPrinter();
     void changeBackground();
     void selectTemplate();
+    void resetSettings();
 
 private:
     QLabel *mileageLabel;
