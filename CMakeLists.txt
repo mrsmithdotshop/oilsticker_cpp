@@ -4,8 +4,10 @@ project(OilStickerGUI LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Qt installed via Homebrew
-set(CMAKE_PREFIX_PATH "/opt/homebrew/Cellar/qt/6.9.3/lib/cmake")
+set(Qt6_DIR "$ENV{HOME}/Qt/6.10.1/macos/lib/cmake/Qt6")
+
+# Qt Universal
+set(CMAKE_PREFIX_PATH "$ENV{HOME}/Qt/6.10.1/lib/cmake")
 
 # Find required Qt6 packages
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui PrintSupport)
