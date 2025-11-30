@@ -11,6 +11,8 @@ Using the Settings menu you can select any CUPS connected printer, select your o
 A built-in preview window shows the label with a customizable background image. Backgrounds can be designed or tested using tools such as the online Labelary ZPL viewer:
 https://labelary.com/viewer.html
 
+If saving the preview label image directly from the Zebra label printer it will be 448x418 even though the printer area is only 406x406. 
+
 This tool provides a fast, reliable workflow for printing clean, consistent service labels in an automotive shop environment.
 
-<img width="562" height="740" alt="samplelabel" src="https://github.com/user-attachments/assets/8e5da06f-daaa-4a5a-aa00-de8ec41dea98" />
+<img width="1224" height="1480" alt="sampleLabel" src="https://github.com/user-attachments/assets/09ebc534-5e07-445d-8297-5b1588c27a78" />
