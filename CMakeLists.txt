@@ -4,15 +4,14 @@ project(OilStickerGUI LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Qt paths
 set(Qt6_DIR "$ENV{HOME}/Qt/6.10.1/macos/lib/cmake/Qt6")
-
-# Qt Universal
-set(CMAKE_PREFIX_PATH "$ENV{HOME}/Qt/6.10.1/lib/cmake")
+# find_package will use Qt6_DIR
 
 # Find required Qt6 packages
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui PrintSupport)
 
-# Enable AUTOMOC for Q_OBJECT classes
+# Enable AUTOMOC and AUTORCC for Q_OBJECT and .qrc
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
@@ -32,10 +31,16 @@ set(HEADERS
     include/LabelPreview.hpp
 )
 
+# Resource file
+set(RESOURCES
+    resources/resources.qrc
+)
+
 # Add executable
 qt_add_executable(oilstickergui
     ${SOURCES}
     ${HEADERS}
+    ${RESOURCES}      # <-- include resources here
 )
 
 # Link Qt libraries

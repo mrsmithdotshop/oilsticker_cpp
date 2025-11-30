@@ -27,7 +27,7 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     : QWidget(parent)
 {
     setWindowTitle("Oil Change Label Generator");
-    setFixedSize(450, 600);
+    setFixedSize(500, 600);
 
     // -----------------------------
     // Load settings
@@ -122,8 +122,11 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     // -----------------------------
     // Preview
     // -----------------------------
-    preview = new LabelPreview(backgroundPath, this);
-    mainLayout->addWidget(preview);
+    //preview = new LabelPreview(backgroundPath, this);
+    preview = new LabelPreview(this);
+    // mainLayout->addWidget(preview);
+    mainLayout->addWidget(preview, 0, Qt::AlignCenter);
+
 
     // -----------------------------
     // Buttons

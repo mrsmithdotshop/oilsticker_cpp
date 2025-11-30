@@ -3,30 +3,40 @@
 
 #include <QPainter>
 #include <QFont>
+#include <QFontDatabase>
 #include <QFile>
 #include <QCoreApplication>
 #include <QDir>
 #include <QDebug>
 #include <QFileInfo>
+#include <QPainterPath>
 
-LabelPreview::LabelPreview(const QString &backgroundPath, QWidget *parent)
+LabelPreview::LabelPreview(QWidget *parent)
     : QFrame(parent), nextMileage(), nextDate(), oilType(), today()
 {
-    setFixedSize(406, 406);
+    // Set widget size to full label white box
+    setFixedSize(448, 418);
 
-    // Load background with fallback logic
-    background = loadWithFallback(backgroundPath);
-
-    if (background.isNull()) {
-        // final fallback -> white fill
-        background = QPixmap(size());
-        background.fill(Qt::white);
+    // Load Zebra A0 TTF font from resources
+    int fontId = QFontDatabase::addApplicationFont(":/resources/tt0003m_.ttf");
+    if (fontId != -1) {
+        QStringList families = QFontDatabase::applicationFontFamilies(fontId);
+        if (!families.isEmpty()) {
+            zebraFontFamily = families.at(0);
+            qDebug() << "Loaded Zebra A0 font:" << zebraFontFamily;
+        } else {
+            qWarning() << "Loaded font but no families found!";
+            zebraFontFamily.clear();
+        }
     } else {
-        background = background.scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+        qWarning() << "Failed to load font tt0003m_.ttf";
+        zebraFontFamily.clear();
     }
+
+    // Set initial background using the same method as loading new images
+    setBackground(":/resources/oil_label_bg.png");
 }
 
-// Updated updatePreview with oilType and today's date
 void LabelPreview::updatePreview(const QString &mileage,
                                  const QString &dateStr,
                                  const QString &oilTypeStr,
@@ -42,65 +52,85 @@ void LabelPreview::updatePreview(const QString &mileage,
 void LabelPreview::setBackground(const QString &backgroundPath)
 {
     QPixmap pix = loadWithFallback(backgroundPath);
-
-    if (pix.isNull()) {
-        qWarning() << "LabelPreview::setBackground — could not load:" << backgroundPath;
-        // keep existing background (if any) or use white placeholder
-        if (background.isNull()) {
-            background = QPixmap(size());
-            background.fill(Qt::white);
-        }
+    if (!pix.isNull()) {
+        background = pix; // keep original size (448x418)
     } else {
-        background = pix.scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+        qWarning() << "LabelPreview::setBackground — could not load:" << backgroundPath;
+        // fallback white background of full widget size
+        background = QPixmap(size());
+        background.fill(Qt::white);
     }
-
     update();
 }
 
 void LabelPreview::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing, true);
 
-    // Draw background
+    // --- Draw white box background (full widget) ---
+    QRect whiteBoxRect(0, 0, width(), height());
+    painter.fillRect(whiteBoxRect, Qt::white);
+
+    // --- Draw PNG background centered on white box ---
     if (!background.isNull()) {
-        QPixmap bg = background;
-        if (bg.size() != size()) {
-            bg = bg.scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
-        }
-        painter.drawPixmap(0, 0, bg);
-    } else {
-        painter.fillRect(rect(), Qt::white);
+        int bgX = (width()  - background.width())  / 2;
+        int bgY = (height() - background.height()) / 2;
+        painter.drawPixmap(bgX, bgY, background);
     }
 
+    // --- Draw 406x406 rounded rectangle (black outline) centered ---
+    const int labelWidth  = 406;
+    const int labelHeight = 406;
+    int labelX = (width()  - labelWidth)  / 2;
+    int labelY = (height() - labelHeight) / 2;
+    QRect labelRect(labelX, labelY, labelWidth, labelHeight);
+
+    QPainterPath borderPath;
+    borderPath.addRoundedRect(labelRect, 20, 20);
+
+    QPen borderPen(Qt::black);
+    borderPen.setWidth(2);
+    painter.setPen(borderPen);
+    painter.setBrush(Qt::NoBrush);
+    painter.drawPath(borderPath);
+
+    // --- Prepare fonts ---
+    QString fontFamily = zebraFontFamily.isEmpty() ? "Arial" : zebraFontFamily;
+    QFont smallFont(fontFamily, 15);
+    QFont largeFont(fontFamily, 30);
     painter.setPen(Qt::black);
-    QFont font("Arial", 15);  
-    painter.setFont(font);
 
-    // Draw oil type
+    // --- Draw text inside label using temporary clip ---
+    painter.save();
+    painter.setClipPath(borderPath); // only clip inside rounded rectangle
+
+    int padding = 25;
+    int smallTextY = labelRect.top() + 285 * labelRect.height() / 406;
+    int largeTextY = labelRect.top() + 365 * labelRect.height() / 406;
+
+    painter.setFont(smallFont);
     if (!oilType.isEmpty()) {
-        painter.drawText(25, 285, oilType);
+        painter.drawText(labelRect.left() + padding, smallTextY, oilType);
     }
-
-    // Draw today's date 
     if (!today.isEmpty()) {
-        painter.drawText(325, 285, today);
+        painter.drawText(labelRect.right() - padding - painter.fontMetrics().horizontalAdvance(today),
+                         smallTextY, today);
     }
-    
-    font.setPointSize(30);
-    painter.setFont(font);
 
-    // Draw next mileage (bottom-left)
+    painter.setFont(largeFont);
     if (!nextMileage.isEmpty()) {
-        painter.drawText(25, 365, nextMileage);
+        painter.drawText(labelRect.left() + padding, largeTextY, nextMileage);
+    }
+    if (!nextDate.isEmpty()) {
+        painter.drawText(labelRect.right() - padding - painter.fontMetrics().horizontalAdvance(nextDate),
+                         largeTextY, nextDate);
     }
 
-    // Draw next service date (bottom-right)
-    if (!nextDate.isEmpty()) {
-        painter.drawText(265, 365, nextDate);
-    }
+    painter.restore(); // remove clipping
 }
 
-/* Helpers (unchanged) */
+/* --- Helpers --- */
 
 QPixmap LabelPreview::tryLoadPixmap(const QString &path) const
 {
@@ -125,19 +155,19 @@ QPixmap LabelPreview::loadWithFallback(const QString &path) const
     QPixmap p = tryLoadPixmap(path);
     if (!p.isNull()) return p;
 
-    // 2) try bundle Resources/<basename>
+    // 2) try app bundle resources folder
     QFileInfo fi(path);
     QString baseName = fi.fileName();
     if (!baseName.isEmpty()) {
         QString appDir = QCoreApplication::applicationDirPath();
-        QString bundleResources = QDir(appDir).filePath("../Resources/" + baseName);
+        QString bundleResources = QDir(appDir).filePath("resources/" + baseName);
         if (QFile::exists(bundleResources)) {
             QPixmap p2(bundleResources);
             if (!p2.isNull()) return p2;
         }
     }
 
-    // 3) embedded default
+    // 3) embedded default resource
     QString embedded = ":/resources/oil_label_bg.png";
     QPixmap p3(embedded);
     if (!p3.isNull()) return p3;
