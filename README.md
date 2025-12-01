@@ -29,4 +29,4 @@ The program populates four Field Name (^FN) variables that are sent to the print
 
 This tool provides a fast, reliable workflow for printing clean, consistent service labels in an automotive shop environment.
 
-<img width="562" height="740" alt="samplelabel" src="https://github.com/user-attachments/assets/8e5da06f-daaa-4a5a-aa00-de8ec41dea98" />
+<img width="1224" height="1480" alt="sampleLabel" src="https://github.com/user-attachments/assets/de430191-44c9-4343-85f4-126ac6893a63" />
