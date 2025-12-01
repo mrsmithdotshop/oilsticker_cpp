@@ -11,7 +11,7 @@ https://labelary.com/viewer.html
 
 It is recommended production backgrounds be generated directly on the Zebra printer iteself via the web interface. This will generate the most accurate representation of the actual printed label. The image.png will be 448x418 which represents the entire label with backing not just the printed area of the 406x406 label. Currently the application is expecting a 448x418 PNG image.
 
-The program populates four Field Name (^FN) variables that are sent to the printer. For more information see: https://docs.zebra.com/us/en/printers/software/zpl-pg/c-zpl-zpl-commands/r-zpl-fn.html
+The program populates four Field Number (^FN) variables that are sent to the printer. For more information see: https://docs.zebra.com/us/en/printers/software/zpl-pg/c-zpl-zpl-commands/r-zpl-fn.html
 
     QString zpl = QString(
         "^XA\n"
