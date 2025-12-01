@@ -1,5 +1,6 @@
 #include "OilLabelGUI.hpp"
 #include "LabelPreview.hpp"
+#include "version.hpp"
 
 #include <QApplication>
 #include <QLabel>
@@ -57,8 +58,9 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     // Menu Bar
     // -----------------------------
     QMenuBar *menuBar = new QMenuBar(this);
-    QMenu *settingsMenu = menuBar->addMenu("Settings");
 
+    // Settings menu
+    QMenu *settingsMenu = menuBar->addMenu("Settings");
     QAction *changePrinter = new QAction("Select Printer", this);
     connect(changePrinter, &QAction::triggered, this, &OilLabelGUI::selectPrinter);
     settingsMenu->addAction(changePrinter);
@@ -72,8 +74,14 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     settingsMenu->addAction(changeTemplateAct);
 
     QAction *resetSettingsAct = new QAction("Reset All Settings", this);
-    settingsMenu->addAction(resetSettingsAct);
     connect(resetSettingsAct, &QAction::triggered, this, &OilLabelGUI::resetSettings);
+    settingsMenu->addAction(resetSettingsAct);
+
+    // Help menu
+    QMenu *helpMenu = menuBar->addMenu("Help");
+    QAction *aboutAction = new QAction("About", this);
+    connect(aboutAction, &QAction::triggered, this, &OilLabelGUI::showAboutDialog);
+    helpMenu->addAction(aboutAction);
 
     // -----------------------------
     // Layouts
@@ -411,3 +419,19 @@ void OilLabelGUI::resetSettings()
         qApp->quit();
     }
 }
+
+// -----------------------------
+// Version Display
+// -----------------------------
+void OilLabelGUI::showAboutDialog()
+{
+    QString versionString = QString("Oil Sticker App\n"
+                                    "Version %1.%2.%3 (Build %4)")
+                                .arg(PROJECT_VERSION_MAJOR)
+                                .arg(PROJECT_VERSION_MINOR)
+                                .arg(PROJECT_VERSION_PATCH)
+                                .arg(PROJECT_VERSION_BUILD);
+
+    QMessageBox::about(this, "About Oil Sticker App", versionString);
+}
+

@@ -22,6 +22,7 @@ private slots:
     void changeBackground();
     void selectTemplate();
     void resetSettings();
+    void showAboutDialog();
 
 private:
     QLabel *mileageLabel;
