@@ -38,7 +38,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         const nextDateObj = new Date();
         nextDateObj.setMonth(nextDateObj.getMonth() + 6);
-        document.getElementById('nextDate').value = `${pad2(nextDateObj.getMonth()+1)}/${pad2(nextDateObj.getDate())}/${String(today.getFullYear()).slice(-2)}`;
+        document.getElementById('nextDate').value = `${pad2(nextDateObj.getMonth()+1)}/${pad2(nextDateObj.getDate())}/${String(nextDateObj.getFullYear()).slice(-2)}`;
     }
 
     function drawLabel() {
@@ -103,7 +103,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const template = document.getElementById('templateName').value.toUpperCase();
         const oilType = document.getElementById('oilType').value;
         const today = document.getElementById('today').value;
-	const formattedMileage = document.getElementById('formattedMileage').value;
+	    const formattedMileage = document.getElementById('formattedMileage').value;
         const nextDate = document.getElementById('nextDate').value;
 
 	const zpl = `
