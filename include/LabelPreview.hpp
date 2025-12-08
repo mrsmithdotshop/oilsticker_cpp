@@ -20,6 +20,7 @@ public:
 
     // Change the background image (filesystem path or resource path)
     void setBackground(const QString &backgroundPath);
+    void clearInputs();
 
 protected:
     void paintEvent(QPaintEvent *event) override;

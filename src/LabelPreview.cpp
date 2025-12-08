@@ -23,7 +23,7 @@ LabelPreview::LabelPreview(QWidget *parent)
         QStringList families = QFontDatabase::applicationFontFamilies(fontId);
         if (!families.isEmpty()) {
             zebraFontFamily = families.at(0);
-            qDebug() << "Loaded Zebra A0 font:" << zebraFontFamily;
+            //qDebug() << "Loaded Zebra A0 font:" << zebraFontFamily;
         } else {
             qWarning() << "Loaded font but no families found!";
             zebraFontFamily.clear();
@@ -34,7 +34,7 @@ LabelPreview::LabelPreview(QWidget *parent)
     }
 
     // Set initial background using the same method as loading new images
-    setBackground(":/resources/oil_label_bg.png");
+    setBackground(":/resources/max.png");
 }
 
 void LabelPreview::updatePreview(const QString &mileage,
@@ -106,8 +106,8 @@ void LabelPreview::paintEvent(QPaintEvent *)
     painter.setClipPath(borderPath); // only clip inside rounded rectangle
 
     int padding = 25;
-    int smallTextY = labelRect.top() + 285 * labelRect.height() / 406;
-    int largeTextY = labelRect.top() + 365 * labelRect.height() / 406;
+    int smallTextY = labelRect.top() + 280 * labelRect.height() / 406;
+    int largeTextY = labelRect.top() + 360 * labelRect.height() / 406;
 
     painter.setFont(smallFont);
     if (!oilType.isEmpty()) {

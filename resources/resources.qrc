@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/resources">
-        <file>oil_label_bg.png</file>
+        <file>max.png</file>
         <file>tt0003m_.ttf</file>
+        <file>oilchange.ico</file>
     </qresource>
 </RCC>

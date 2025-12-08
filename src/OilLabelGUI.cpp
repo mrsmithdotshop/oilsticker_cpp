@@ -23,6 +23,11 @@
 #include <QTimer>
 #include <QStandardPaths>
 #include <QFileInfo>
+#include <QtNetwork/QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QUrl>
+#include <QByteArray>
 
 OilLabelGUI::OilLabelGUI(QWidget *parent)
     : QWidget(parent)
@@ -37,10 +42,10 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
 
     printerName = settings.value("printer", "").toString();
     defaultMiles = settings.value("defaultMiles", 5000).toInt();
-    templateName = settings.value("template", "DEFAULT.ZPL").toString();
+    templateName = settings.value("template", "MAX.ZPL").toString();
 
     QString savedBg = settings.value("background", "").toString();
-    QString defaultResource = ":/resources/oil_label_bg.png";
+    QString defaultResource = ":/resources/max.png";
 
     if (savedBg.isEmpty()) {
         backgroundPath = defaultResource;
@@ -90,9 +95,9 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     mainLayout->setMenuBar(menuBar);
 
     // -----------------------------
-// Inputs
-// -----------------------------
-// Current Mileage
+    // Inputs
+    // -----------------------------
+    // Current Mileage
     mileageLabel = new QLabel("Current Mileage:");
     mileageInput = new QLineEdit();
     mileageInput->setPlaceholderText("e.g. 123456");
@@ -130,11 +135,9 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     // -----------------------------
     // Preview
     // -----------------------------
-    //preview = new LabelPreview(backgroundPath, this);
     preview = new LabelPreview(this);
-    // mainLayout->addWidget(preview);
+    preview->setBackground(backgroundPath);
     mainLayout->addWidget(preview, 0, Qt::AlignCenter);
-
 
     // -----------------------------
     // Buttons
@@ -237,7 +240,7 @@ void OilLabelGUI::printLabel()
     QString nextDate = QDate::currentDate().addMonths(6).toString("MM/dd/yy");
 
     QString oilType = oilTypeInput->text().trimmed();
-    if (oilType.isEmpty()) oilType = "N/A";
+    if (oilType.isEmpty()) oilType = "";
 
     QString today = QDate::currentDate().toString("MM/dd/yy");
 
@@ -260,13 +263,26 @@ void OilLabelGUI::printLabel()
         return;
     }
 
-    QProcess lp;
-    QStringList args;
-    args << "-P" << printerName << "-o" << "raw";
-    lp.start("lpr", args);
-    lp.write(zpl.toUtf8());
-    lp.closeWriteChannel();
-    lp.waitForFinished();
+    // Create a QNetworkAccessManager instance
+    QNetworkAccessManager *networkManager = new QNetworkAccessManager(this);
+
+    // Construct the printer URL with port and IPP path
+    QUrl printerUrl(QString("http://%1:9100/ipp/print").arg(printerName)); // Assuming printerName is the IP or hostname
+    QNetworkRequest request(printerUrl);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/ipp"); // Set content type for IPP
+
+    // Send the ZPL data as the HTTP POST body
+    QNetworkReply *reply = networkManager->post(request, zpl.toUtf8());
+
+    // Handle the reply (optional)
+    connect(reply, &QNetworkReply::finished, this, [reply]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            QMessageBox::information(nullptr, "Success", "Label sent to printer successfully.");
+        } else {
+            QMessageBox::warning(nullptr, "Error", QString("Failed to send label: %1").arg(reply->errorString()));
+        }
+        reply->deleteLater();
+    });
 
     // Auto-closing message box with printer name
     QMessageBox *msgBox = new QMessageBox(this);
@@ -284,90 +300,29 @@ void OilLabelGUI::printLabel()
 // -----------------------------
 // Clear Inputs
 // -----------------------------
-void OilLabelGUI::clearInputs()
-{
+void OilLabelGUI::clearInputs() {
     mileageInput->clear();
-    oilTypeInput->clear();
     intervalInput->setText(QString::number(defaultMiles));
+    oilTypeInput->clear();
     preview->updatePreview(QString(), QString(), QString(), QString());
-}
-
-// -----------------------------
-// Select Printer
-// -----------------------------
-void OilLabelGUI::selectPrinter()
-{
-    QProcess process;
-    process.start("lpstat", QStringList() << "-a");
-    process.waitForFinished();
-    QStringList printers;
-    QString output = process.readAllStandardOutput();
-    for (const QString &line : output.split('\n', Qt::SkipEmptyParts)) {
-        printers << line.split(' ').first();
-    }
-
-    if (printers.isEmpty()) printers << "Autoshop_Label_Printer";
-
-    int currentIndex = printers.indexOf(printerName);
-    if (currentIndex == -1) currentIndex = 0;
-
-    bool ok;
-    QString printer = QInputDialog::getItem(
-        this,
-        "Select Printer",
-        "Printers:",
-        printers,
-        currentIndex,
-        false,
-        &ok
-    );
-
-    if (ok && !printer.isEmpty()) {
-        printerName = printer;
-        QSettings settings("MyCompany", "OilStickerApp");
-        settings.setValue("printer", printerName);
-    }
 }
 
 // -----------------------------
 // Change Background
 // -----------------------------
-void OilLabelGUI::changeBackground()
-{
-    QSettings settings("MyCompany", "OilStickerApp");
-
-    QString lastFolder = settings.value(
-        "backgroundFolder",
-        QStandardPaths::writableLocation(QStandardPaths::DownloadLocation)
-    ).toString();
-
-    QFileDialog dialog(this, "Select Background PNG", lastFolder);
-    dialog.setNameFilter("PNG Images (*.png)");
-    dialog.setFileMode(QFileDialog::ExistingFile);
-    dialog.setOption(QFileDialog::DontUseNativeDialog, true);
-
-    QString fileName;
-    if (dialog.exec() == QDialog::Accepted) {
-        fileName = dialog.selectedFiles().first();
-    }
-
-    if (!fileName.isEmpty()) {
-        backgroundPath = fileName;
+void OilLabelGUI::changeBackground() {
+    QString filePath = QFileDialog::getOpenFileName(this, "Select Background Image", "", "Images (*.png *.jpg *.bmp)");
+    if (!filePath.isEmpty()) {
+        backgroundPath = filePath;
+        QSettings settings("MyCompany", "OilStickerApp");
         settings.setValue("background", backgroundPath);
-
-        QFileInfo fi(fileName);
-        settings.setValue("backgroundFolder", fi.absolutePath());
-    } else {
-        QString savedBg = settings.value("background", "").toString();
-        if (!savedBg.isEmpty() && !QFile::exists(savedBg)) {
-            backgroundPath = ":/resources/oil_label_bg.png";
-            settings.setValue("background", backgroundPath);
-        }
+        preview->setBackground(backgroundPath);
     }
-
-    preview->setBackground(backgroundPath);
 }
 
+// -----------------------------
+// Select Template
+// -----------------------------
 // -----------------------------
 // Select Template
 // -----------------------------
@@ -391,47 +346,79 @@ void OilLabelGUI::selectTemplate()
 }
 
 // -----------------------------
-// Reset Qsettings
+// Reset Settings
 // -----------------------------
-void OilLabelGUI::resetSettings()
+void OilLabelGUI::resetSettings() {
+    QSettings settings("MyCompany", "OilStickerApp");
+    settings.clear();
+    QMessageBox::information(this, "Settings Reset", "All settings have been reset to default.");
+    QApplication::quit(); // Restart the application to apply changes
+}
+
+// -----------------------------
+// Show About Dialog
+// -----------------------------
+void OilLabelGUI::showAboutDialog() {
+    QMessageBox::about(this, "About Oil Sticker App",
+        "Oil Sticker App\n"
+        "Version 1.0.0\n\n"
+        "Developed by MyCompany.\n"
+        "This application generates oil change labels.");
+}
+
+// -----------------------------
+// Select Printer
+// -----------------------------
+void OilLabelGUI::selectPrinter()
 {
-    QMessageBox::StandardButton reply = QMessageBox::question(
-        this,
-        "Reset Settings",
-        "Are you sure you want to clear all saved settings?",
-        QMessageBox::Yes | QMessageBox::No
-    );
+    QProcess process;
+    process.start("lpstat", QStringList() << "-a");
+    process.waitForFinished(1500);
 
-    if (reply == QMessageBox::Yes) {
+    QString output = process.readAllStandardOutput().trimmed();
+    QString error  = process.readAllStandardError().trimmed();
+
+    QStringList printers;
+
+    bool lpstatFailed =
+        output.isEmpty() ||
+        output.contains("not recognized", Qt::CaseInsensitive) ||
+        error.contains("not recognized", Qt::CaseInsensitive) ||
+        error.contains("lpstat", Qt::CaseInsensitive);
+
+    if (!lpstatFailed) {
+        // -----------------------------------------
+        // Mac/Linux → Parse printer list normally
+        // -----------------------------------------
+        for (const QString &line : output.split('\n', Qt::SkipEmptyParts)) {
+            printers << line.split(' ').first();
+        }
+    }
+
+    // If lpstat found nothing, behave like Windows
+    if (printers.isEmpty()) {
+        // -----------------------------------------
+        // Windows → Ask for printer IP address
+        // -----------------------------------------
         QSettings settings("MyCompany", "OilStickerApp");
-        settings.clear();
-        settings.sync();
+        QString storedIP = settings.value("printer", "").toString(); // Retrieve stored IP
 
-        QMessageBox::information(this, "Settings Reset",
-                                 "All settings have been cleared.\n"
-                                 "Please restart the application.");
+        bool ok = false;
+        QString ip = QInputDialog::getText(
+            this,
+            "Enter Printer IP",
+            "No printers were auto-detected.\n"
+            "Please enter the printer’s IP address:",
+            QLineEdit::Normal,
+            storedIP, // Show stored IP as default value
+            &ok
+        );
 
-        // Optional: immediately reload defaults in the running app:
-        //  - reset printerName, backgroundPath, templateName, etc.
-        //  - OR simply exit and let user restart
+        if (ok && !ip.trimmed().isEmpty()) {
+            printerName = ip.trimmed();
+            settings.setValue("printer", printerName); // Save the new IP
+        }
 
-        // Example forced exit:
-        qApp->quit();
+        return;
     }
 }
-
-// -----------------------------
-// Version Display
-// -----------------------------
-void OilLabelGUI::showAboutDialog()
-{
-    QString versionString = QString("Oil Sticker App\n"
-                                    "Version %1.%2.%3 (Build %4)")
-                                .arg(PROJECT_VERSION_MAJOR)
-                                .arg(PROJECT_VERSION_MINOR)
-                                .arg(PROJECT_VERSION_PATCH)
-                                .arg(PROJECT_VERSION_BUILD);
-
-    QMessageBox::about(this, "About Oil Sticker App", versionString);
-}
-
