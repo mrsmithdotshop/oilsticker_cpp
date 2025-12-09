@@ -9,32 +9,75 @@
     body { font-family: Arial, sans-serif; margin: 20px; }
     canvas { border: 1px solid #ccc; display: block; margin-bottom: 20px; }
     .form-field { margin-bottom: 10px; }
-    label { display: inline-block; width: 120px; }
+    label { display: inline-block; width: 140px; }
 </style>
 </head>
 <body>
 
 <h2>Oil Label Preview</h2>
 
+<!-- Label Style Switch -->
+<div class="form-field">
+    <label>Label Style:</label>
+    <select id="labelStyle">
+        <option value="style1">OIL SERVICE</option>
+        <option value="style2">KEY TAG</option>
+    </select>
+</div>
+
 <!-- Label Preview Canvas -->
 <canvas id="labelCanvas" width="448" height="418"></canvas>
 
-<!-- Form Fields -->
-<div class="form-field">
-    <label for="templateName">Template Name:</label>
-    <input type="text" id="templateName" value="DEFAULT.ZPL">
+<!-- OIL SERVICE Fields -->
+<div class="oilFields">
+    <div class="form-field">
+        <label for="templateName">Template Name:</label>
+        <input type="text" id="templateName" value="DEFAULT.ZPL">
+    </div>
+    <div class="form-field">
+        <label for="oilType">Oil Type:</label>
+        <input type="text" id="oilType" value="">
+    </div>
+    <div class="form-field">
+        <label for="mileage">Current Mileage:</label>
+        <input type="number" id="mileage" value="">
+    </div>
+    <div class="form-field">
+        <label for="nextService">Next Service:</label>
+        <input type="number" id="nextService" value="5000">
+    </div>
 </div>
-<div class="form-field">
-    <label for="oilType">Oil Type:</label>
-    <input type="text" id="oilType" value="">
-</div>
-<div class="form-field">
-    <label for="mileage">Current Mileage:</label>
-    <input type="number" id="mileage" value="">
-</div>
-<div class="form-field">
-    <label for="nextService">Next Service:</label>
-    <input type="number" id="nextService" value="5000">
+
+<!-- KEY TAG Fields (hidden by default) -->
+<div id="keyTagFields" style="display:none;">
+    <div class="form-field">
+        <label for="templateName">Template Name:</label>
+        <input type="text" id="templateName" value="KEYTAG.ZPL">
+    </div>
+    <div class="form-field">
+        <label for="customer">Customer:</label>
+        <input type="text" id="customer" value="">
+    </div>
+    <div class="form-field">
+        <label for="car">Car:</label>
+        <input type="text" id="car" value="">
+    </div>
+    <div class="form-field">
+        <label for="plate">Plate:</label>
+        <input type="text" id="plate" value="">
+    </div>
+    <div class="form-field">
+        <label for="vin">VIN:</label>
+        <input type="text" id="vin" value="">
+    </div>
+    <div class="form-field">
+        <label for="color">Color:</label>
+        <input type="text" id="color" value="">
+    </div>
+    <div class="form-field">
+        <label for="repairOrder">Repair Order:</label>
+        <input type="text" id="repairOrder" value="">
+    </div>
 </div>
 
 <!-- Hidden Calculated Fields -->
@@ -44,6 +87,9 @@
 
 <!-- Print Button -->
 <button id="printBtn">Print Label</button>
+
+<!-- Clear Button -->
+<button id="clearBtn" type="button">Clear</button>
 
 </body>
 </html>
