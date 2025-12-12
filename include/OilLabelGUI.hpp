@@ -6,6 +6,7 @@ class QLabel;
 class QLineEdit;
 class QPushButton;
 class LabelPreview;
+class QComboBox;
 
 class OilLabelGUI : public QWidget
 {
@@ -23,29 +24,47 @@ private slots:
     void selectTemplate();
     void resetSettings();
     void showAboutDialog();
+    void onStyleChanged(const QString &style);
 
 private:
+    // Common
     QLabel *mileageLabel;
     QLineEdit *mileageInput;
 
     QLabel *intervalLabel;
     QLineEdit *intervalInput;
 
-    QLineEdit *oilTypeInput;   // Input field for oil type
-
     QPushButton *printBtn;
     QPushButton *clearBtn;
 
+    // Default-style fields
+    QLabel *templateLabel;
+    QLineEdit *templateInput; // displays template name for editing (also stored in templateName)
+    QLabel *oilTypeLabel;
+    QLineEdit *oilTypeInput;
+
+    // Keytag fields (hidden when default)
+    QLabel *kt_templateLabel;
+    QLineEdit *kt_templateInput;
+    QLabel *customerLabel;
+    QLineEdit *customerInput;
+    QLabel *carLabel;
+    QLineEdit *carInput;
+    QLabel *plateLabel;
+    QLineEdit *plateInput;
+    QLabel *vinLabel;
+    QLineEdit *vinInput;
+    QLabel *colorLabel;
+    QLineEdit *colorInput;
+    QLabel *repairOrderLabel;
+    QLineEdit *repairOrderInput;
+
     LabelPreview *preview;
 
-    // ---------- Add these ----------
-    QString printerName;     // stores selected printer
-    QString backgroundPath;  // stores selected background PNG
-    int defaultMiles = 5000; // stores user’s preferred interval (PERSISTENT)
-    QString templateName;  // stores selected ZPL template name
+    QComboBox *styleCombo;           // dropdown to pick style
+    QString labelStyle;              // "DEFAULT" or "KEYTAG"
+    QString printerName;             // stores selected printer (or IP)
+    QString backgroundPath;          // stores selected background PNG
+    QString templateName;            // stores template name (DEFAULT.ZPL / KEYTAG.ZPL)
+    int defaultMiles;
 };
-
-
-
-
-

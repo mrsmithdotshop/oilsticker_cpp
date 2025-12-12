@@ -27,14 +27,13 @@
 #include <QComboBox>
 #include <QLocale>
 
-const QSize defaultSize(500, 600);   // window size for DEFAULT style
-const QSize keytagSize(500, 800);    // window size for KEYTAG style
-
 OilLabelGUI::OilLabelGUI(QWidget *parent)
     : QWidget(parent)
 {
     setWindowTitle("Oil Change Label Generator");
     //setFixedSize(500, 800);
+    resize(sizeHint());
+    setMinimumSize(sizeHint());
 
     // -----------------------------
     // Load settings
@@ -230,8 +229,8 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     bool isKeyTag = (labelStyle == "KEYTAG");
     //templateLabel->setVisible(!isKeyTag);
     //templateInput->setVisible(!isKeyTag);
-    templateLabel->setVisible(0);
-    templateInput->setVisible(0);
+    templateLabel->hide();
+    templateInput->hide();
     mileageLabel->setVisible(!isKeyTag);
     mileageInput->setVisible(!isKeyTag);
     intervalLabel->setVisible(!isKeyTag);
@@ -241,8 +240,8 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
 
     //kt_templateLabel->setVisible(isKeyTag);
     //kt_templateInput->setVisible(isKeyTag);
-    kt_templateLabel->setVisible(0);
-    kt_templateInput->setVisible(0);
+    kt_templateLabel->hide();
+    kt_templateInput->hide();
     customerLabel->setVisible(isKeyTag);
     customerInput->setVisible(isKeyTag);
     carLabel->setVisible(isKeyTag);
@@ -673,8 +672,8 @@ void OilLabelGUI::onStyleChanged(const QString &style)
     bool isKeyTag = (labelStyle == "KEYTAG");
 //    templateLabel->setVisible(!isKeyTag);
 //    templateInput->setVisible(!isKeyTag);
-    templateLabel->setVisible(0);
-    templateInput->setVisible(0);
+    templateLabel->hide();
+    templateInput->hide();
     mileageLabel->setVisible(!isKeyTag);
     mileageInput->setVisible(!isKeyTag);
     intervalLabel->setVisible(!isKeyTag);
@@ -684,8 +683,8 @@ void OilLabelGUI::onStyleChanged(const QString &style)
 
     //kt_templateLabel->setVisible(isKeyTag);
     //kt_templateInput->setVisible(isKeyTag);
-    kt_templateLabel->setVisible(0);
-    kt_templateInput->setVisible(0);
+    kt_templateLabel->hide();
+    kt_templateInput->hide();
     customerLabel->setVisible(isKeyTag);
     customerInput->setVisible(isKeyTag);
     carLabel->setVisible(isKeyTag);
@@ -707,16 +706,4 @@ void OilLabelGUI::onStyleChanged(const QString &style)
     templateInput->setText(templateName);
     kt_templateInput->setText(templateName);
 
-    // Dynamically adjust window size
-    //adjustSize();                // resize to fit current widgets
-    //setMinimumSize(sizeHint());  // update min size to current visible widgets
-    //QSize minWinSize(400, 500);
-    //if (width() < minWinSize.width() || height() < minWinSize.height()) {
-    //    resize(minWinSize);
-    //}
-    if (labelStyle == "KEYTAG")
-    resize(keytagSize);
-        else
-    resize(defaultSize);
-    adjustSize();
 }
