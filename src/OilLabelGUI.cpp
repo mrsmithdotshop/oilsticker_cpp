@@ -26,6 +26,11 @@
 #include <QFileInfo>
 #include <QComboBox>
 #include <QLocale>
+#include <QtNetwork/QNetworkAccessManager>
+#include <QtNetwork/QNetworkRequest>
+#include <QtNetwork/QNetworkReply>
+#include <QUrl>
+#include <QByteArray>
 
 const QSize defaultSize(500, 600);   // window size for DEFAULT style
 const QSize keytagSize(500, 800);    // window size for KEYTAG style
@@ -401,7 +406,6 @@ void OilLabelGUI::printLabel()
        bool okQty;
         int qty = quantityInput->text().toInt(&okQty);
         if (!okQty || qty < 1) qty = 1;
-//        preview->setQuantity(qty);
 
         QString zpl = QString(
             "^XA\n"
@@ -421,14 +425,9 @@ void OilLabelGUI::printLabel()
             QMessageBox::warning(this, "No Printer Selected", "Please select a printer in Settings.");
             return;
         }
+        // Print via sendZplToPrinter function
+        sendZplToPrinter(zpl);
 
-        QProcess lp;
-        QStringList args;
-        args << "-P" << printerName << "-o" << "raw";
-        lp.start("lpr", args);
-        lp.write(zpl.toUtf8());
-        lp.closeWriteChannel();
-        lp.waitForFinished();
     } else { // KEYTAG print
         int qty = 1;
         bool okQty = false;
@@ -465,14 +464,9 @@ void OilLabelGUI::printLabel()
             QMessageBox::warning(this, "No Printer Selected", "Please select a printer in Settings.");
             return;
         }
+    // Print via sendZplToPrinter function
+    sendZplToPrinter(zpl);
 
-        QProcess lp;
-        QStringList args;
-        args << "-P" << printerName << "-o" << "raw";
-        lp.start("lpr", args);
-        lp.write(zpl.toUtf8());
-        lp.closeWriteChannel();
-        lp.waitForFinished();
     }
 
     // Auto-closing message box with printer name
@@ -529,6 +523,8 @@ void OilLabelGUI::selectPrinter()
         output.contains("not recognized", Qt::CaseInsensitive) ||
         error.contains("not recognized", Qt::CaseInsensitive) ||
         error.contains("lpstat", Qt::CaseInsensitive);
+
+    useIppPrinting = lpstatFailed;
 
     if (!lpstatFailed) {
         for (const QString &line : output.split('\n', Qt::SkipEmptyParts)) {
@@ -744,4 +740,73 @@ void OilLabelGUI::onStyleChanged(const QString &style)
         else
     resize(defaultSize);
     adjustSize();
+}
+//
+// Print ZPL
+//
+void OilLabelGUI::sendZplToPrinter(const QString &zpl)
+{
+    if (printerName.isEmpty()) {
+        QMessageBox::warning(this, "No Printer Selected",
+                             "Please select a printer in Settings.");
+        return;
+    }
+
+    if (!useIppPrinting) {
+        // -----------------------------
+        // CUPS / lpr path (macOS, Linux)
+        // -----------------------------
+        QProcess lp;
+        QStringList args;
+        args << "-P" << printerName << "-o" << "raw";
+
+        lp.start("lpr", args);
+        lp.write(zpl.toUtf8());
+        lp.closeWriteChannel();
+
+        if (!lp.waitForFinished(3000)) {
+            QMessageBox::warning(this, "Print Error",
+                                 "lpr did not finish sending the job.");
+        }
+
+    } else {
+        // -----------------------------
+        // IPP / HTTP path (Windows)
+        // -----------------------------
+        QNetworkAccessManager *networkManager =
+            new QNetworkAccessManager(this);
+
+        // NOTE:
+        // Port 9100 is *RAW socket*, not IPP.
+        // Zebra IPP is usually :631/ipp/print
+        QUrl printerUrl(
+            QString("http://%1:631/ipp/print").arg(printerName)
+        );
+
+        QNetworkRequest request(printerUrl);
+        request.setHeader(
+            QNetworkRequest::ContentTypeHeader,
+            "application/ipp"
+        );
+
+        QNetworkReply *reply =
+            networkManager->post(request, zpl.toUtf8());
+
+        connect(reply, &QNetworkReply::finished, this,
+            [this, reply]() {
+                if (reply->error() == QNetworkReply::NoError) {
+                    QMessageBox::information(
+                        this, "Printed",
+                        "Label sent to printer successfully."
+                    );
+                } else {
+                    QMessageBox::warning(
+                        this, "Print Error",
+                        QString("Failed to send label:\n%1")
+                            .arg(reply->errorString())
+                    );
+                }
+                reply->deleteLater();
+            });
+    }
 }
