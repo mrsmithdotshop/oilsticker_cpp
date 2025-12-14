@@ -34,7 +34,6 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     : QWidget(parent)
 {
     setWindowTitle("Oil Change Label Generator");
-    //setFixedSize(500, 800);
 
     // -----------------------------
     // Load settings
@@ -159,6 +158,13 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     repairOrderLabel = new QLabel("Repair Order:");
     repairOrderInput = new QLineEdit();
 
+    quantityLabel = new QLabel("Quantity:");
+    quantityInput = new QLineEdit();
+    quantityInput->setFixedWidth(80);
+    quantityInput->setPlaceholderText("1");
+    quantityInput->setText("1");
+    quantityInput->setValidator(new QIntValidator(1, 99, this));
+
     // Arrange default fields
     QHBoxLayout *tmplRow = new QHBoxLayout();
     tmplRow->addWidget(templateLabel);
@@ -202,6 +208,7 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     addRowTo(ktBox, vinLabel, vinInput);
     addRowTo(ktBox, colorLabel, colorInput);
     addRowTo(ktBox, repairOrderLabel, repairOrderInput);
+    addRowTo(ktBox, quantityLabel, quantityInput);
 
     mainLayout->addLayout(ktBox);
 
@@ -228,8 +235,6 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     // Visibility initial state per style
     // -----------------------------
     bool isKeyTag = (labelStyle == "KEYTAG");
-    //templateLabel->setVisible(!isKeyTag);
-    //templateInput->setVisible(!isKeyTag);
     templateLabel->setVisible(0);
     templateInput->setVisible(0);
     mileageLabel->setVisible(!isKeyTag);
@@ -239,8 +244,6 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     oilTypeLabel->setVisible(!isKeyTag);
     oilTypeInput->setVisible(!isKeyTag);
 
-    //kt_templateLabel->setVisible(isKeyTag);
-    //kt_templateInput->setVisible(isKeyTag);
     kt_templateLabel->setVisible(0);
     kt_templateInput->setVisible(0);
     customerLabel->setVisible(isKeyTag);
@@ -255,6 +258,8 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     colorInput->setVisible(isKeyTag);
     repairOrderLabel->setVisible(isKeyTag);
     repairOrderInput->setVisible(isKeyTag);
+    quantityLabel->setVisible(isKeyTag);
+    quantityInput->setVisible(isKeyTag);
 
     // -----------------------------
     // Persist default miles when editing
@@ -295,6 +300,13 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
             oilTypeInput->blockSignals(false);
         }
         liveUpdate();
+    });
+
+    connect(quantityInput, &QLineEdit::textChanged, this, [this](const QString &text) {
+        bool ok;
+        int q = text.toInt(&ok);
+        if (!ok || q < 1) q = 1;
+            preview->setQuantity(q);
     });
 
 auto ktConnect = [&](QLineEdit *le){
@@ -349,6 +361,9 @@ void OilLabelGUI::liveUpdate()
             preview->updatePreview(QString(), QString(), QString(), QString());
         }
     } else { // KEYTAG preview uses keytag fields
+        bool okQty;
+        int qty = quantityInput->text().toInt(&okQty);
+        if (!okQty || qty < 1) qty = 1;
         preview->updatePreview(QString(), QString(),
                                QString(), QString(),
                                customerInput->text().trimmed(),
@@ -357,6 +372,7 @@ void OilLabelGUI::liveUpdate()
                                vinInput->text().trimmed(),
                                colorInput->text().trimmed(),
                                repairOrderInput->text().trimmed());
+        preview->setQuantity(quantityInput->text().toInt());
     }
 }
 
@@ -381,6 +397,11 @@ void OilLabelGUI::printLabel()
         QString nextDate = QDate::currentDate().addMonths(6).toString("MM/dd/yy");
         QString oilType = oilTypeInput->text().trimmed();
         QString today = QDate::currentDate().toString("MM/dd/yy");
+
+       bool okQty;
+        int qty = quantityInput->text().toInt(&okQty);
+        if (!okQty || qty < 1) qty = 1;
+//        preview->setQuantity(qty);
 
         QString zpl = QString(
             "^XA\n"
@@ -409,25 +430,36 @@ void OilLabelGUI::printLabel()
         lp.closeWriteChannel();
         lp.waitForFinished();
     } else { // KEYTAG print
+        int qty = 1;
+        bool okQty = false;
+        qty = quantityInput->text().toInt(&okQty);
+        if (!okQty || qty < 1) {
+            qty = 1;
+        } else {
+            templateName = "LABEL.ZPL";
+        }
+
         QString zpl = QString(
-            "^XA\n"
-            "^XF%1^FS\n"
-            "^FN2^FD%2^FS\n"
-            "^FN3^FD%3^FS\n"
-            "^FN4^FD%4^FS\n"
-            "^FN5^FD%5^FS\n"
-            "^FN6^FD%6^FS\n"
-            "^FN7^FD%7^FS\n"
-            "^FN8^FD%8^FS\n"
-            "^XZ"
-        ).arg(templateName)
-         .arg(customerInput->text().trimmed())
-         .arg(carInput->text().trimmed())
-         .arg(plateInput->text().trimmed())
-         .arg(vinInput->text().trimmed())
-         .arg(colorInput->text().trimmed())
-         .arg(repairOrderInput->text().trimmed())
-         .arg(repairOrderInput->text().trimmed());
+        "^XA\n"
+        "^PQ%8\n"
+        "^XF%1^FS\n"
+        "^FN2^FD%2^FS\n"
+        "^FN3^FD%3^FS\n"
+        "^FN4^FD%4^FS\n"
+        "^FN5^FD%5^FS\n"
+        "^FN6^FD%6^FS\n"
+        "^FN7^FD%7^FS\n"
+        "^XZ"
+        )
+        .arg(templateName)
+        .arg(customerInput->text().trimmed())
+        .arg(carInput->text().trimmed())
+        .arg(plateInput->text().trimmed())
+        .arg(vinInput->text().trimmed())
+        .arg(colorInput->text().trimmed())
+        .arg(repairOrderInput->text().trimmed())
+        .arg(qty);
+
 
         if (printerName.isEmpty()) {
             QMessageBox::warning(this, "No Printer Selected", "Please select a printer in Settings.");
@@ -469,6 +501,7 @@ void OilLabelGUI::clearInputs()
     vinInput->clear();
     colorInput->clear();
     repairOrderInput->clear();
+    quantityInput->setText("1");
 
     // Reset template inputs to stored templateName
     templateInput->setText(templateName);
@@ -671,8 +704,6 @@ void OilLabelGUI::onStyleChanged(const QString &style)
 
     // update UI visibility
     bool isKeyTag = (labelStyle == "KEYTAG");
-//    templateLabel->setVisible(!isKeyTag);
-//    templateInput->setVisible(!isKeyTag);
     templateLabel->setVisible(0);
     templateInput->setVisible(0);
     mileageLabel->setVisible(!isKeyTag);
@@ -682,8 +713,6 @@ void OilLabelGUI::onStyleChanged(const QString &style)
     oilTypeLabel->setVisible(!isKeyTag);
     oilTypeInput->setVisible(!isKeyTag);
 
-    //kt_templateLabel->setVisible(isKeyTag);
-    //kt_templateInput->setVisible(isKeyTag);
     kt_templateLabel->setVisible(0);
     kt_templateInput->setVisible(0);
     customerLabel->setVisible(isKeyTag);
@@ -698,6 +727,8 @@ void OilLabelGUI::onStyleChanged(const QString &style)
     colorInput->setVisible(isKeyTag);
     repairOrderLabel->setVisible(isKeyTag);
     repairOrderInput->setVisible(isKeyTag);
+    quantityLabel->setVisible(isKeyTag);
+    quantityInput->setVisible(isKeyTag);
 
     // update preview style / background
     preview->setLabelStyle(labelStyle);
@@ -707,13 +738,7 @@ void OilLabelGUI::onStyleChanged(const QString &style)
     templateInput->setText(templateName);
     kt_templateInput->setText(templateName);
 
-    // Dynamically adjust window size
-    //adjustSize();                // resize to fit current widgets
-    //setMinimumSize(sizeHint());  // update min size to current visible widgets
-    //QSize minWinSize(400, 500);
-    //if (width() < minWinSize.width() || height() < minWinSize.height()) {
-    //    resize(minWinSize);
-    //}
+    // Adjust window size
     if (labelStyle == "KEYTAG")
     resize(keytagSize);
         else

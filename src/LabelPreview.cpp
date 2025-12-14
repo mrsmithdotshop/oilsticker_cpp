@@ -44,6 +44,7 @@ void LabelPreview::updatePreview(const QString &nm,
                                  const QString &v,
                                  const QString &col,
                                  const QString &ro)
+
 {
     nextMileage = nm;
     nextDate = nd;
@@ -164,7 +165,48 @@ void LabelPreview::paintEvent(QPaintEvent *)
         if (!vin.isEmpty())      { painter.drawText(labelRect.left() + padding, y, vin);      y += lineH; }
         if (!color.isEmpty())    { painter.drawText(labelRect.left() + padding, y, color);    y += lineH; }
         if (!repairOrder.isEmpty())    { painter.drawText(labelRect.left() + padding, y, repairOrder);    y += lineH; }
-        // repairOrder will be printed larger below
+
+        if (quantity > 1) {
+            painter.save();
+
+            // Move origin to bottom-right of label
+            painter.translate(labelRect.right() + 25, labelRect.bottom() + 5);
+
+            // Rotate canvas 180 degrees (upside down + right-to-left)
+            painter.rotate(180);
+
+            // Re-run the SAME layout logic
+            int y2 = labelRect.top() + 25;
+            const int lineH2 = painter.fontMetrics().height() + 2;
+
+            if (!customer.isEmpty()) {
+                painter.drawText(labelRect.left() + padding, y2, customer);
+                y2 += lineH2;
+            }
+            if (!car.isEmpty()) {
+                painter.drawText(labelRect.left() + padding, y2, car);
+                y2 += lineH2;
+            }
+            if (!plate.isEmpty()) {
+                painter.drawText(labelRect.left() + padding, y2, plate);
+                y2 += lineH2;
+            }
+            if (!vin.isEmpty()) {
+                painter.drawText(labelRect.left() + padding, y2, vin);
+                y2 += lineH2;
+            }
+            if (!color.isEmpty()) {
+                painter.drawText(labelRect.left() + padding, y2, color);
+                y2 += lineH2;
+            }
+            if (!repairOrder.isEmpty()) {
+                painter.drawText(labelRect.left() + padding, y2, repairOrder);
+                y2 += lineH2;
+            }
+
+            painter.restore();
+        }
+
     }
 
     // LARGE font (mileage / nextDate or repairOrder for keytag)
@@ -185,7 +227,8 @@ void LabelPreview::paintEvent(QPaintEvent *)
         ro.toInt(&ok);                         // ok==true if the entire string is a number
 
         // Show repairOrder only when it's not empty AND not a pure integer
-        if (!ro.isEmpty() && ok) {
+        if (!ro.isEmpty() && ok && quantity == 1) {
+        //if (!ro.isEmpty() && ok) {
             painter.drawText(labelRect.left() + padding, largeTextY, repairOrder);
         }
             //painter.drawText(labelRect.left() + padding, largeTextY, repairOrder);
@@ -193,6 +236,13 @@ void LabelPreview::paintEvent(QPaintEvent *)
     
 
     painter.restore();
+}
+
+// Set Quantitiy
+void LabelPreview::setQuantity(int q)
+{
+    quantity = q > 0 ? q : 1;
+    update();
 }
 
 /* --- Helpers --- */

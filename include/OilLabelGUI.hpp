@@ -58,6 +58,8 @@ private:
     QLineEdit *colorInput;
     QLabel *repairOrderLabel;
     QLineEdit *repairOrderInput;
+    QLabel *quantityLabel;
+    QLineEdit *quantityInput;
 
     LabelPreview *preview;
 

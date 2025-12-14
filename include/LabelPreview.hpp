@@ -11,6 +11,8 @@ class LabelPreview : public QFrame
 public:
     explicit LabelPreview(QWidget *parent = nullptr);
 
+    void setQuantity(int q);
+
     // Unified updatePreview() covering both styles.
     // For DEFAULT style provide nextMileage/nextDate/oilType/today.
     // For KEYTAG style provide customer/car/plate/vin/color/repairOrder in the last params.
@@ -43,6 +45,10 @@ private:
     // 2) app bundle Resources/<basename> (useful inside .app)
     // 3) embedded resource ":/resources/<basename>" (your default)
     QPixmap loadWithFallback(const QString &path) const;
+
+    // Quantity
+    //int m_quantity = 1;
+    int quantity = 1;
 
     // Member state
     QPixmap background;
