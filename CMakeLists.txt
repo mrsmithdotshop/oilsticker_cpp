@@ -11,11 +11,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find required Qt6 packages
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui PrintSupport Network)
 
-#target_link_libraries(oilstickergui
-#    Qt6::Widgets
-#    Qt6::Network
-#)
-
 # Enable AUTOMOC and AUTORCC for Q_OBJECT and .qrc
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
