@@ -85,6 +85,11 @@ void LabelPreview::setLabelStyle(const QString &style)
 void LabelPreview::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
+
+    QFont font("Swis721 BT");
+    qreal scale = painter.device()->logicalDpiY() / 72.0;  // 72 DPI baseline
+    font.setPointSizeF(12 / scale);                        // adjust 12pt
+    painter.setFont(font);
     painter.setRenderHint(QPainter::Antialiasing, true);
 
     // --- White base box (full widget) ---
@@ -117,15 +122,33 @@ void LabelPreview::paintEvent(QPaintEvent *)
     // --- Prepare fonts (fallback to Arial) ---
     QString fontFamily = zebraFontFamily.isEmpty() ? "Arial" : zebraFontFamily;
 
-    // Style-specific variables
-    int smallPoint = 15;
-    int largePoint = 30;
+    // --- Defaults ---
+    int smallPoint;
+    int largePoint;
     int smallYOffset = 285;
     int largeYOffset = 365;
 
+    // --- Platform-specific font sizes ---
+    #if defined(Q_OS_MACOS)
+        smallPoint = 15;
+        largePoint = 30;
+    #elif defined(Q_OS_WIN)
+        smallPoint = 11;
+        largePoint = 22;
+    #else
+        smallPoint = 15;
+        largePoint = 30;
+    #endif
+
+    // --- Style overrides ---
     if (currentStyle == "KEYTAG") {
+    #if defined(Q_OS_MACOS)
         smallPoint = 20;
         largePoint = 150;
+    #elif defined(Q_OS_WIN)
+        smallPoint = 15;
+        largePoint = 112;
+    #endif
         smallYOffset = 260;
         largeYOffset = 360;
     }
