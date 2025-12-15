@@ -8,6 +8,7 @@ dist/
 cmake_install.cmake
 CMakeCache.txt
 CMakeLists.txt
+CMakeLists
 make_mac_app.sh
 Makefile
 OilStickerApp.dmg
