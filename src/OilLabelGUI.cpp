@@ -431,10 +431,14 @@ void OilLabelGUI::printLabel()
     } else { // KEYTAG print
         int qty = 1;
         bool okQty = false;
+
         qty = quantityInput->text().toInt(&okQty);
-        if (!okQty || qty < 1) {
-            qty = 1;
-        } else {
+        if (!okQty || qty < 1) qty = 1;
+
+        // divide by 2, round UP
+        qty = (qty + 1) / 2;
+
+        if (qty > 1) {
             templateName = "LABEL.ZPL";
         }
 
@@ -661,18 +665,37 @@ void OilLabelGUI::resetSettings()
     }
 }
 
-//
-// About
-//
 void OilLabelGUI::showAboutDialog()
 {
-    QString versionString = QString("Oil Sticker App\nVersion %1.%2.%3 (Build %4)")
-                                .arg(PROJECT_VERSION_MAJOR)
-                                .arg(PROJECT_VERSION_MINOR)
-                                .arg(PROJECT_VERSION_PATCH)
-                                .arg(PROJECT_VERSION_BUILD);
+    // The font you expect to be using
+    QFont requestedFont("Swis721 BT");
+    requestedFont.setPointSize(12);
+
+    QFontInfo info(requestedFont);
+
+    QString versionString = QString(
+        "Oil Sticker App\n"
+        "Version %1.%2.%3 (Build %4)\n\n"
+        "Font Info:\n"
+        "Requested: %5\n"
+        "Resolved:  %6\n"
+        "Point Size: %7\n"
+        "Exact Match: %8\n"
+        "Platform: %9"
+    )
+    .arg(PROJECT_VERSION_MAJOR)
+    .arg(PROJECT_VERSION_MINOR)
+    .arg(PROJECT_VERSION_PATCH)
+    .arg(PROJECT_VERSION_BUILD)
+    .arg(requestedFont.family())
+    .arg(info.family())
+    .arg(info.pointSize())
+    .arg(info.exactMatch() ? "Yes" : "NO (fallback)")
+    .arg(QSysInfo::prettyProductName());
+
     QMessageBox::about(this, "About Oil Sticker App", versionString);
 }
+
 
 //
 // Style changed handler
