@@ -189,46 +189,44 @@ void LabelPreview::paintEvent(QPaintEvent *)
         if (!color.isEmpty())    { painter.drawText(labelRect.left() + padding, y, color);    y += lineH; }
         if (!repairOrder.isEmpty())    { painter.drawText(labelRect.left() + padding, y, repairOrder);    y += lineH; }
 
-        if (quantity > 1) {
-            painter.save();
+if (quantity > 1) {
+    painter.save();
 
-            // Move origin to bottom-right of label
-            painter.translate(labelRect.right() + 25, labelRect.bottom() + 5);
+    // Move origin to start a new block below the top section
+    int offsetY = labelRect.top() + 25 + (painter.fontMetrics().height() + 2) * 6 + 10; 
+    // 6 lines of text + 10px spacing between top and bottom copy
 
-            // Rotate canvas 180 degrees (upside down + right-to-left)
-            painter.rotate(180);
+    int y2 = offsetY;
+    const int lineH2 = painter.fontMetrics().height() + 2;
 
-            // Re-run the SAME layout logic
-            int y2 = labelRect.top() + 25;
-            const int lineH2 = painter.fontMetrics().height() + 2;
+    if (!customer.isEmpty()) {
+        painter.drawText(labelRect.left() + padding, y2, customer);
+        y2 += lineH2;
+    }
+    if (!car.isEmpty()) {
+        painter.drawText(labelRect.left() + padding, y2, car);
+        y2 += lineH2;
+    }
+    if (!plate.isEmpty()) {
+        painter.drawText(labelRect.left() + padding, y2, plate);
+        y2 += lineH2;
+    }
+    if (!vin.isEmpty()) {
+        painter.drawText(labelRect.left() + padding, y2, vin);
+        y2 += lineH2;
+    }
+    if (!color.isEmpty()) {
+        painter.drawText(labelRect.left() + padding, y2, color);
+        y2 += lineH2;
+    }
+    if (!repairOrder.isEmpty()) {
+        painter.drawText(labelRect.left() + padding, y2, repairOrder);
+        y2 += lineH2;
+    }
 
-            if (!customer.isEmpty()) {
-                painter.drawText(labelRect.left() + padding, y2, customer);
-                y2 += lineH2;
-            }
-            if (!car.isEmpty()) {
-                painter.drawText(labelRect.left() + padding, y2, car);
-                y2 += lineH2;
-            }
-            if (!plate.isEmpty()) {
-                painter.drawText(labelRect.left() + padding, y2, plate);
-                y2 += lineH2;
-            }
-            if (!vin.isEmpty()) {
-                painter.drawText(labelRect.left() + padding, y2, vin);
-                y2 += lineH2;
-            }
-            if (!color.isEmpty()) {
-                painter.drawText(labelRect.left() + padding, y2, color);
-                y2 += lineH2;
-            }
-            if (!repairOrder.isEmpty()) {
-                painter.drawText(labelRect.left() + padding, y2, repairOrder);
-                y2 += lineH2;
-            }
+    painter.restore();
+}
 
-            painter.restore();
-        }
 
     }
 
