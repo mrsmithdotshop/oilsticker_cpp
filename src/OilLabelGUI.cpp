@@ -49,6 +49,8 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     defaultMiles = settings.value("defaultMiles", 5000).toInt();
     labelStyle = settings.value("labelStyle", "DEFAULT").toString().toUpper();
     templateName = settings.value("template", "DEFAULT.ZPL").toString();
+    useIppPrinting = settings.value("useIppPrinting", false).toBool();
+
 
     // default backgrounds for styles
     QString defaultResource_default = ":/resources/default.png";
@@ -554,6 +556,7 @@ void OilLabelGUI::selectPrinter()
         if (ok && !ip.trimmed().isEmpty()) {
             printerName = ip.trimmed();
             settings.setValue("printer", printerName);
+            settings.setValue("useIppPrinting", true);
         }
         return;
     }
@@ -576,6 +579,7 @@ void OilLabelGUI::selectPrinter()
         printerName = printer;
         QSettings settings("MyCompany", "OilStickerApp");
         settings.setValue("printer", printerName);
+        settings.setValue("useIppPrinting", false);
     }
 }
 
@@ -803,7 +807,7 @@ void OilLabelGUI::sendZplToPrinter(const QString &zpl)
         // Port 9100 is *RAW socket*, not IPP.
         // Zebra IPP is usually :631/ipp/print
         QUrl printerUrl(
-            QString("http://%1:631/ipp/print").arg(printerName)
+            QString("http://%1:9100/ipp/print").arg(printerName)
         );
 
         QNetworkRequest request(printerUrl);
