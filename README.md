@@ -11,21 +11,9 @@ https://labelary.com/viewer.html
 
 It is recommended production backgrounds be generated directly on the Zebra printer iteself via the web interface. This will generate the most accurate representation of the actual printed label. The image.png will be 448x418 which represents the entire label with backing not just the printed area of the 406x406 label. Currently the application is expecting a 448x418 PNG image.
 
-The program populates four Field Number (^FN) variables that are sent to the printer. For more information see: https://docs.zebra.com/us/en/printers/software/zpl-pg/c-zpl-zpl-commands/r-zpl-fn.html
+The program populates Field Number (^FN) variables that are sent to the printer. For more information see: https://docs.zebra.com/us/en/printers/software/zpl-pg/c-zpl-zpl-commands/r-zpl-fn.html
 
-    QString zpl = QString(
-        "^XA\n"
-        "^XF%1^FS\n"
-        "^FN2^FD%2^FS\n" // oil type
-        "^FN3^FD%3^FS\n" // today's date
-        "^FN4^FD%4^FS\n" // next mileage
-        "^FN5^FD%5^FS\n" // next date
-        "^XZ"
-    ).arg(templateName)
-     .arg(oilType)
-     .arg(today)
-     .arg(formattedMileage)
-     .arg(nextDate);
+There are three ZPL templates found in the zpl/ folder. DEFAULT.ZPL is used to print the service sticker. KEYTAG.ZPL is used to print key tag labels. LABEL.ZPL is used to print labels, two per label when cut in half.
 
 This tool provides a fast, reliable workflow for printing clean, consistent service labels in an automotive shop environment.
 
