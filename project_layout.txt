@@ -9,8 +9,12 @@ oilsticker_cpp/
 │  └─ LabelPreview.cpp
 ├─ resources/
 │  └─ oil_label_bg.png   (place your 406x406 PNG here)
-└─ samples/
-   ├─ blanklabel.png
-   ├─ blanklabel.zpl
-   ├─ LOGO.zpl
-   └─ oilLabel.png
+├─ samples/
+│  ├─ blanklabel.png
+│  ├─ blanklabel.zpl
+│  ├─ LOGO.zpl
+│  └─ oilLabel.png
+└─ zpl/
+   ├─ DEFAULT.ZPL (default oil sticker)
+   ├─ KEYTAG.ZPL 
+   └─ LABEL.ZPL
