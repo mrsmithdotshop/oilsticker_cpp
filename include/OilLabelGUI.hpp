@@ -70,5 +70,6 @@ private:
     QString templateName;            // stores template name (DEFAULT.ZPL / KEYTAG.ZPL)
     int defaultMiles;
     bool useIppPrinting = false;
-    void sendZplToPrinter(const QString &zpl);
+    QString keytagPrinterName;
+    void sendZplToPrinter(const QString &zpl, const QString &printer);
 };

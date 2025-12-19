@@ -13,6 +13,8 @@ public:
 
     void setQuantity(int q);
 
+    void updatePreviewSize();
+
     // Unified updatePreview() covering both styles.
     // For DEFAULT style provide nextMileage/nextDate/oilType/today.
     // For KEYTAG style provide customer/car/plate/vin/color/repairOrder in the last params.

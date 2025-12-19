@@ -33,7 +33,7 @@
 #include <QByteArray>
 
 const QSize defaultSize(500, 600);   // window size for DEFAULT style
-const QSize keytagSize(500, 800);    // window size for KEYTAG style
+const QSize keytagSize(500, 600);    // window size for KEYTAG style
 
 OilLabelGUI::OilLabelGUI(QWidget *parent)
     : QWidget(parent)
@@ -45,12 +45,12 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     // -----------------------------
     QSettings settings("MyCompany", "OilStickerApp");
 
-    printerName = settings.value("printer", "").toString();
+    printerName = settings.value("printerName", "").toString();
     defaultMiles = settings.value("defaultMiles", 5000).toInt();
     labelStyle = settings.value("labelStyle", "DEFAULT").toString().toUpper();
     templateName = settings.value("template", "DEFAULT.ZPL").toString();
     useIppPrinting = settings.value("useIppPrinting", false).toBool();
-
+    keytagPrinterName  = settings.value("keytagPrinterName").toString();
 
     // default backgrounds for styles
     QString defaultResource_default = ":/resources/default.png";
@@ -58,10 +58,10 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
 
     // Choose background path based on saved style
     if (labelStyle == "KEYTAG") {
-        backgroundPath = settings.value("background", defaultResource_keytag).toString();
+        backgroundPath = settings.value("keytagBackground", defaultResource_keytag).toString();
         templateName = settings.value("template", "KEYTAG.ZPL").toString();
     } else {
-        backgroundPath = settings.value("background", defaultResource_default).toString();
+        backgroundPath = settings.value("defaultBackground", defaultResource_default).toString();
         templateName = settings.value("template", "DEFAULT.ZPL").toString();
         labelStyle = "DEFAULT";
     }
@@ -428,7 +428,7 @@ void OilLabelGUI::printLabel()
             return;
         }
         // Print via sendZplToPrinter function
-        sendZplToPrinter(zpl);
+        sendZplToPrinter(zpl, printerName);
 
     } else { // KEYTAG print
         int qty = 1;
@@ -471,14 +471,19 @@ void OilLabelGUI::printLabel()
             return;
         }
     // Print via sendZplToPrinter function
-    sendZplToPrinter(zpl);
+    sendZplToPrinter(zpl, keytagPrinterName);
 
     }
+
 
     // Auto-closing message box with printer name
     QMessageBox *msgBox = new QMessageBox(this);
     msgBox->setWindowTitle("Printed");
-    msgBox->setText(QString("Label sent to printer: %1").arg(printerName));
+    if (labelStyle == "DEFAULT") {
+        msgBox->setText(QString("Label sent to printer: %1").arg(printerName));
+    } else {
+        msgBox->setText(QString("Label sent to printer: %1").arg(keytagPrinterName));
+    }
     msgBox->setIcon(QMessageBox::Information);
     msgBox->setStandardButtons(QMessageBox::NoButton);
     msgBox->show();
@@ -541,46 +546,69 @@ void OilLabelGUI::selectPrinter()
     // If none found prompt for IP (Windows-style)
     if (printers.isEmpty()) {
         QSettings settings("MyCompany", "OilStickerApp");
-        QString storedIP = settings.value("printer", "").toString();
-
+        bool isKeyTag = (labelStyle == "KEYTAG");
+        QString settingsKey = isKeyTag
+            ? "keytagPrinterName"
+            : "printerName";
+        QString storedIP = settings.value(settingsKey, "").toString();
         bool ok = false;
         QString ip = QInputDialog::getText(
             this,
-            "Enter Printer IP",
+            isKeyTag ? "Enter Keytag Printer IP" : "Enter Label Printer IP",
             "No printers detected. Enter printer IP or hostname:",
             QLineEdit::Normal,
             storedIP,
             &ok
         );
 
-        if (ok && !ip.trimmed().isEmpty()) {
-            printerName = ip.trimmed();
-            settings.setValue("printer", printerName);
-            settings.setValue("useIppPrinting", true);
+        if (ok && !ip.isEmpty()) {
+            if (isKeyTag) {
+                keytagPrinterName = ip;
+            } else {
+                printerName = ip;
+            }
+
+            settings.setValue(settingsKey, ip);
         }
-        return;
+
+        return;  // important: stop further printer selection logic
     }
 
-    int currentIndex = printers.indexOf(printerName);
-    if (currentIndex == -1) currentIndex = 0;
+
+    QString preselectedPrinter =
+    (labelStyle == "KEYTAG")
+        ? keytagPrinterName
+        : printerName;
+
+    int currentIndex = printers.indexOf(preselectedPrinter);
+    if (currentIndex < 0)
+        currentIndex = 0;
+
 
     bool ok;
     QString printer = QInputDialog::getItem(
         this,
         "Select Printer",
-        "Printers:",
+        labelStyle == "KEYTAG"
+        ? "Select Keytag Printer:"
+        : "Select Default Label Printer:",
         printers,
         currentIndex,
         false,
         &ok
     );
 
+    QSettings settings("MyCompany", "OilStickerApp");
     if (ok && !printer.isEmpty()) {
+    if (labelStyle == "KEYTAG") {
+        keytagPrinterName = printer;
+        settings.setValue("keytagPrinterName", printer);
+    } else {
         printerName = printer;
-        QSettings settings("MyCompany", "OilStickerApp");
-        settings.setValue("printer", printerName);
-        settings.setValue("useIppPrinting", false);
+        settings.setValue("printerName", printer);
     }
+    }
+
 }
 
 //
@@ -603,19 +631,36 @@ void OilLabelGUI::changeBackground()
     QString fileName;
     if (dialog.exec() == QDialog::Accepted) fileName = dialog.selectedFiles().first();
 
+//    if (!fileName.isEmpty()) {
+//        backgroundPath = fileName;
+//        settings.setValue("background", backgroundPath);
+//        QFileInfo fi(fileName);
+//        settings.setValue("backgroundFolder", fi.absolutePath());
     if (!fileName.isEmpty()) {
         backgroundPath = fileName;
-        settings.setValue("background", backgroundPath);
+
+        bool isKeyTag = (labelStyle == "KEYTAG");
+        settings.setValue(
+            isKeyTag ? "keytagBackground" : "defaultBackground",
+            backgroundPath
+        );
+
         QFileInfo fi(fileName);
         settings.setValue("backgroundFolder", fi.absolutePath());
     } else {
-        QString savedBg = settings.value("background", "").toString();
+        //QString savedBg = settings.value("background", "").toString();
+        QString savedBg = settings.value(
+        labelStyle == "KEYTAG" ? "keytagBackground": "defaultBackground","").toString();
+
         if (!savedBg.isEmpty() && !QFile::exists(savedBg)) {
             if (labelStyle == "KEYTAG")
                 backgroundPath = ":/resources/keytag.png";
             else
                 backgroundPath = ":/resources/default.png";
-            settings.setValue("background", backgroundPath);
+            //settings.setValue("background", backgroundPath);
+            bool isKeyTag = (labelStyle == "KEYTAG");
+            settings.setValue(isKeyTag ? "keytagBackground" : "defaultBackground",backgroundPath);
+
         }
     }
 
@@ -709,21 +754,29 @@ void OilLabelGUI::onStyleChanged(const QString &style)
     QString s = style.toUpper();
     if (s == "KEY TAG") s = "KEYTAG";
 
+    QSettings settings("MyCompany", "OilStickerApp");
+
     if (s == "KEYTAG") {
         labelStyle = "KEYTAG";
         templateName = "KEYTAG.ZPL";
-        backgroundPath = ":/resources/keytag.png";
+        backgroundPath = settings.value(
+            "keytagBackground",
+            ":/resources/keytag.png"
+        ).toString();
     } else {
         labelStyle = "DEFAULT";
         templateName = "DEFAULT.ZPL";
-        backgroundPath = ":/resources/default.png";
-    }
+        backgroundPath = settings.value(
+            "defaultBackground",
+            ":/resources/default.png"
+        ).toString();
+}
+
 
     // persist
-    QSettings settings("MyCompany", "OilStickerApp");
+    //QSettings settings("MyCompany", "OilStickerApp");
     settings.setValue("labelStyle", labelStyle);
     settings.setValue("template", templateName);
-    settings.setValue("background", backgroundPath);
 
     // update UI visibility
     bool isKeyTag = (labelStyle == "KEYTAG");
@@ -771,9 +824,9 @@ void OilLabelGUI::onStyleChanged(const QString &style)
 //
 // Print ZPL
 //
-void OilLabelGUI::sendZplToPrinter(const QString &zpl)
+void OilLabelGUI::sendZplToPrinter(const QString &zpl, const QString &printer)
 {
-    if (printerName.isEmpty()) {
+    if (printer.isEmpty()) {
         QMessageBox::warning(this, "No Printer Selected",
                              "Please select a printer in Settings.");
         return;
@@ -785,7 +838,7 @@ void OilLabelGUI::sendZplToPrinter(const QString &zpl)
         // -----------------------------
         QProcess lp;
         QStringList args;
-        args << "-P" << printerName << "-o" << "raw";
+        args << "-P" << printer << "-o" << "raw";
 
         lp.start("lpr", args);
         lp.write(zpl.toUtf8());
@@ -807,7 +860,7 @@ void OilLabelGUI::sendZplToPrinter(const QString &zpl)
         // Port 9100 is *RAW socket*, not IPP.
         // Zebra IPP is usually :631/ipp/print
         QUrl printerUrl(
-            QString("http://%1:9100/ipp/print").arg(printerName)
+            QString("http://%1:9100/ipp/print").arg(printer)
         );
 
         QNetworkRequest request(printerUrl);

@@ -18,7 +18,10 @@ LabelPreview::LabelPreview(QWidget *parent)
       zebraFontFamily(), currentStyle("DEFAULT")
 {
     // Widget size - white box that holds the background image (448x418)
-    setFixedSize(448, 418);
+
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    updatePreviewSize();
 
     // Try to load the Zebra A0 TTF file from qrc resources (optional)
     int fontId = QFontDatabase::addApplicationFont(":/resources/tt0003m_.ttf");
@@ -78,9 +81,17 @@ void LabelPreview::setBackground(const QString &backgroundPath)
 void LabelPreview::setLabelStyle(const QString &style)
 {
     if (style.isEmpty()) return;
-    currentStyle = style.toUpper();
+
+    QString newStyle = style.toUpper();
+    if (newStyle == currentStyle)
+        return;
+
+    currentStyle = newStyle;
+
+    updatePreviewSize();
     update();
 }
+
 
 void LabelPreview::paintEvent(QPaintEvent *)
 {
@@ -104,11 +115,14 @@ void LabelPreview::paintEvent(QPaintEvent *)
     }
 
     // --- Draw 406x406 rounded rectangle (black outline) centered ---
-    const int labelWidth  = 406;
-    const int labelHeight = 406;
+    int labelWidth  = 406;
+    int labelHeight = (currentStyle == "KEYTAG") ? 203 : 406;
+
     int labelX = (width()  - labelWidth)  / 2;
     int labelY = (height() - labelHeight) / 2;
+
     QRect labelRect(labelX, labelY, labelWidth, labelHeight);
+
 
     QPainterPath borderPath;
     borderPath.addRoundedRect(labelRect, 20, 20);
@@ -189,6 +203,7 @@ void LabelPreview::paintEvent(QPaintEvent *)
         if (!color.isEmpty())    { painter.drawText(labelRect.left() + padding, y, color);    y += lineH; }
         if (!repairOrder.isEmpty())    { painter.drawText(labelRect.left() + padding, y, repairOrder);    y += lineH; }
 
+/*
 if (quantity > 1) {
     painter.save();
 
@@ -226,7 +241,7 @@ if (quantity > 1) {
 
     painter.restore();
 }
-
+*/
 
     }
 
@@ -242,19 +257,7 @@ if (quantity > 1) {
             int tw = painter.fontMetrics().horizontalAdvance(nextDate);
             painter.drawText(labelRect.right() - padding - tw, largeTextY, nextDate);
         }
-    } else { // KEYTAG large field (repair order) bottom-left and duplicate on bottom-right
-        QString ro = repairOrder.trimmed();   // remove leading/trailing whitespace
-        bool ok = false;
-        ro.toInt(&ok);                         // ok==true if the entire string is a number
-
-        // Show repairOrder only when it's not empty AND not a pure integer
-        if (!ro.isEmpty() && ok && quantity == 1) {
-        //if (!ro.isEmpty() && ok) {
-            painter.drawText(labelRect.left() + padding, largeTextY, repairOrder);
-        }
-            //painter.drawText(labelRect.left() + padding, largeTextY, repairOrder);
-        }
-    
+    } 
 
     painter.restore();
 }
@@ -265,6 +268,16 @@ void LabelPreview::setQuantity(int q)
     quantity = q > 0 ? q : 1;
     update();
 }
+
+void LabelPreview::updatePreviewSize()
+{
+    int w = 448;
+    int h = (currentStyle == "KEYTAG") ? (418 / 2) : 418;
+
+    setMinimumSize(w, h);
+    setMaximumSize(w, h);
+}
+
 
 /* --- Helpers --- */
 
