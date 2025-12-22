@@ -272,7 +272,7 @@ void LabelPreview::setQuantity(int q)
 void LabelPreview::updatePreviewSize()
 {
     int w = 448;
-    int h = (currentStyle == "KEYTAG") ? (418 / 2) : 418;
+    int h = (currentStyle == "KEYTAG") ? ((418 + 108) / 2) : 418;
 
     setMinimumSize(w, h);
     setMaximumSize(w, h);

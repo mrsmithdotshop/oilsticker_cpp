@@ -38,12 +38,12 @@ const QSize keytagSize(500, 600);    // window size for KEYTAG style
 OilLabelGUI::OilLabelGUI(QWidget *parent)
     : QWidget(parent)
 {
-    setWindowTitle("Oil Change Label Generator");
+    setWindowTitle("Service Label Generator");
 
     // -----------------------------
     // Load settings
     // -----------------------------
-    QSettings settings("MyCompany", "OilStickerApp");
+    QSettings settings("WFWestHS", "OilStickerApp");
 
     printerName = settings.value("printerName", "").toString();
     defaultMiles = settings.value("defaultMiles", 5000).toInt();
@@ -276,7 +276,7 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
         int val = intervalInput->text().toInt(&ok);
         if (ok && val > 0) {
             defaultMiles = val;
-            QSettings settings("MyCompany", "OilStickerApp");
+            QSettings settings("WFWestHS", "OilStickerApp");
             settings.setValue("defaultMiles", defaultMiles);
         }
     });
@@ -288,14 +288,14 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     connect(intervalInput, &QLineEdit::textChanged, this, &OilLabelGUI::liveUpdate);
     connect(templateInput, &QLineEdit::editingFinished, this, [this]() {
         templateName = templateInput->text().toUpper();
-        QSettings settings("MyCompany", "OilStickerApp");
+        QSettings settings("WFWestHS", "OilStickerApp");
         settings.setValue("template", templateName);
     });
 
     connect(kt_templateInput, &QLineEdit::editingFinished, this, [this]() {
         // if editing keytag template store uppercase
         templateName = kt_templateInput->text().toUpper();
-        QSettings settings("MyCompany", "OilStickerApp");
+        QSettings settings("WFWestHS", "OilStickerApp");
         settings.setValue("template", templateName);
     });
 
@@ -545,7 +545,7 @@ void OilLabelGUI::selectPrinter()
 
     // If none found prompt for IP (Windows-style)
     if (printers.isEmpty()) {
-        QSettings settings("MyCompany", "OilStickerApp");
+        QSettings settings("WFWestHS", "OilStickerApp");
         bool isKeyTag = (labelStyle == "KEYTAG");
         QString settingsKey = isKeyTag
             ? "keytagPrinterName"
@@ -598,7 +598,7 @@ void OilLabelGUI::selectPrinter()
         &ok
     );
 
-    QSettings settings("MyCompany", "OilStickerApp");
+    QSettings settings("WFWestHS", "OilStickerApp");
     if (ok && !printer.isEmpty()) {
     if (labelStyle == "KEYTAG") {
         keytagPrinterName = printer;
@@ -616,7 +616,7 @@ void OilLabelGUI::selectPrinter()
 //
 void OilLabelGUI::changeBackground()
 {
-    QSettings settings("MyCompany", "OilStickerApp");
+    QSettings settings("WFWestHS", "OilStickerApp");
 
     QString lastFolder = settings.value(
         "backgroundFolder",
@@ -684,7 +684,7 @@ void OilLabelGUI::selectTemplate()
 
     if (ok && !input.isEmpty()) {
         templateName = input.toUpper();
-        QSettings settings("MyCompany", "OilStickerApp");
+        QSettings settings("WFWestHS", "OilStickerApp");
         settings.setValue("template", templateName);
         // update displayed template fields
         templateInput->setText(templateName);
@@ -705,7 +705,7 @@ void OilLabelGUI::resetSettings()
     );
 
     if (reply == QMessageBox::Yes) {
-        QSettings settings("MyCompany", "OilStickerApp");
+        QSettings settings("WFWestHS", "OilStickerApp");
         settings.clear();
         settings.sync();
         QMessageBox::information(this, "Settings Reset",
@@ -722,6 +722,8 @@ void OilLabelGUI::showAboutDialog()
 
     QFontInfo info(requestedFont);
 
+    QSize s = this->size();   // current window size
+
     QString versionString = QString(
         "Oil Sticker App\n"
         "Version %1.%2.%3 (Build %4)\n\n"
@@ -730,7 +732,8 @@ void OilLabelGUI::showAboutDialog()
         "Resolved:  %6\n"
         "Point Size: %7\n"
         "Exact Match: %8\n"
-        "Platform: %9"
+        "Platform: %9\n"
+        "Window size: %10 x %11"
     )
     .arg(PROJECT_VERSION_MAJOR)
     .arg(PROJECT_VERSION_MINOR)
@@ -740,7 +743,9 @@ void OilLabelGUI::showAboutDialog()
     .arg(info.family())
     .arg(info.pointSize())
     .arg(info.exactMatch() ? "Yes" : "NO (fallback)")
-    .arg(QSysInfo::prettyProductName());
+    .arg(QSysInfo::prettyProductName())
+    .arg(s.width())
+    .arg(s.height());
 
     QMessageBox::about(this, "About Oil Sticker App", versionString);
 }
@@ -754,7 +759,7 @@ void OilLabelGUI::onStyleChanged(const QString &style)
     QString s = style.toUpper();
     if (s == "KEY TAG") s = "KEYTAG";
 
-    QSettings settings("MyCompany", "OilStickerApp");
+    QSettings settings("WFWestHS", "OilStickerApp");
 
     if (s == "KEYTAG") {
         labelStyle = "KEYTAG";
@@ -774,7 +779,7 @@ void OilLabelGUI::onStyleChanged(const QString &style)
 
 
     // persist
-    //QSettings settings("MyCompany", "OilStickerApp");
+    //QSettings settings("WFWestHS", "OilStickerApp");
     settings.setValue("labelStyle", labelStyle);
     settings.setValue("template", templateName);
 
