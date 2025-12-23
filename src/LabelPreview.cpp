@@ -272,7 +272,17 @@ void LabelPreview::setQuantity(int q)
 void LabelPreview::updatePreviewSize()
 {
     int w = 448;
-    int h = (currentStyle == "KEYTAG") ? ((418 + 108) / 2) : 418;
+
+    // --- Platform-specific padding ---
+    #if defined(Q_OS_MACOS)
+        int pad = 108;
+    #elif defined(Q_OS_WIN)
+        int pad = 138;
+    #else
+        int pad = 0;
+    #endif
+
+    int h = (currentStyle == "KEYTAG") ? ((418 + pad) / 2) : 418;
 
     setMinimumSize(w, h);
     setMaximumSize(w, h);
