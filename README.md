@@ -1,6 +1,6 @@
 Oil Change Label Generator
 
-OilStickerApp is a lightweight application for generating and printing professional oil-change reminder labels. It now can print key tag labels (folded) and 6 line labels (cut 1x2). It uses Qt (6.10.1) for both Mac (arm64/x86_64) and Windows (x86_64). The app is designed for use with 2×2" (406×406 px) thermal labels and the Zebra label printer using ZPL (Zebra Programming Language). It has been tested with a Zebra ZD420 and GX420T.
+OilStickerApp is a lightweight application for generating and printing professional oil-change reminder labels. It now can print key tag labels and multiple 6 line labels (1"x2"). It uses Qt (6.10.1) for both Mac (arm64/x86_64) and Windows (x86_64). The app is designed for use with 2"×2" (406×406 px) thermal or pre-printed labels, and 1"x2" thermal labels on a second printer. Uses the Zebra ZPL (Zebra Programming Language). It has been tested with a Zebra ZD420 and GX420T. In my enviroment I am using one Zebra printer for the 2"x2" labels and a second Zebra printer for the 1"x2" key tag labels. The single printer using a folded keytag label can still be utilized by using the appropriate ZPL templates.
 
 The application collects basic service information—oil brand & grade, current date, next service mileage/date—and sends it directly to the printer using the system’s standard CUPS lpr print command. Windows uses IPP. A ZPL template stored on the printer itself handles the layout, so only the variable fields (mileage, date, oil type) are transmitted.
 
@@ -17,4 +17,9 @@ There are three ZPL templates found in the zpl/ folder. DEFAULT.ZPL is used to p
 
 This tool provides a fast, reliable workflow for printing clean, consistent service labels in an automotive shop environment.
 
-<img width="1224" height="1480" alt="sampleLabel" src="https://github.com/user-attachments/assets/de430191-44c9-4343-85f4-126ac6893a63" />
+Default Service Label 2"x2":
+<img width="1200" height="1496" alt="oilsticker1" src="https://github.com/user-attachments/assets/9f2f2397-1be2-469e-88dc-67dba8556055" />
+
+Keytag 1"x2" label:
+<img width="1200" height="1496" alt="oilsticker2" src="https://github.com/user-attachments/assets/a10797ab-4f7d-4aef-ab71-f17e5410ee6c" />
+
