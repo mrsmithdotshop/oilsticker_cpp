@@ -49,6 +49,16 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     defaultMiles = settings.value("defaultMiles", 5000).toInt();
     labelStyle = settings.value("labelStyle", "DEFAULT").toString().toUpper();
     templateName = settings.value("template", "DEFAULT.ZPL").toString();
+    
+   // --- Platform-specific Printing ---
+    #if defined(Q_OS_MACOS)
+        useIppPrinting = settings.value("useIppPrinting", false).toBool();
+    #elif defined(Q_OS_WIN)
+        useIppPrinting = settings.value("useIppPrinting", true).toBool();
+    #else
+        useIppPrinting = settings.value("useIppPrinting", false).toBool();
+    #endif
+
     useIppPrinting = settings.value("useIppPrinting", false).toBool();
     keytagPrinterName  = settings.value("keytagPrinterName").toString();
 
