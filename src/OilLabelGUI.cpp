@@ -26,10 +26,7 @@
 #include <QFileInfo>
 #include <QComboBox>
 #include <QLocale>
-#include <QtNetwork/QNetworkAccessManager>
-#include <QtNetwork/QNetworkRequest>
-#include <QtNetwork/QNetworkReply>
-#include <QUrl>
+#include <QtNetwork/QTcpSocket>
 #include <QByteArray>
 
 const QSize defaultSize(500, 600);   // window size for DEFAULT style
@@ -49,17 +46,6 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
     defaultMiles = settings.value("defaultMiles", 5000).toInt();
     labelStyle = settings.value("labelStyle", "DEFAULT").toString().toUpper();
     templateName = settings.value("template", "DEFAULT.ZPL").toString();
-    
-   // --- Platform-specific Printing ---
-    #if defined(Q_OS_MACOS)
-        useIppPrinting = settings.value("useIppPrinting", false).toBool();
-    #elif defined(Q_OS_WIN)
-        useIppPrinting = settings.value("useIppPrinting", true).toBool();
-    #else
-        useIppPrinting = settings.value("useIppPrinting", false).toBool();
-    #endif
-
-    useIppPrinting = settings.value("useIppPrinting", false).toBool();
     keytagPrinterName  = settings.value("keytagPrinterName").toString();
 
     // default backgrounds for styles
@@ -530,95 +516,31 @@ void OilLabelGUI::clearInputs()
 //
 void OilLabelGUI::selectPrinter()
 {
-    QProcess process;
-    process.start("lpstat", QStringList() << "-a");
-    process.waitForFinished(1500);
-
-    QString output = process.readAllStandardOutput().trimmed();
-    QString error  = process.readAllStandardError().trimmed();
-
-    QStringList printers;
-
-    bool lpstatFailed =
-        output.isEmpty() ||
-        output.contains("not recognized", Qt::CaseInsensitive) ||
-        error.contains("not recognized", Qt::CaseInsensitive) ||
-        error.contains("lpstat", Qt::CaseInsensitive);
-
-    useIppPrinting = lpstatFailed;
-
-    if (!lpstatFailed) {
-        for (const QString &line : output.split('\n', Qt::SkipEmptyParts)) {
-            printers << line.split(' ').first();
-        }
-    }
-
-    // If none found prompt for IP (Windows-style)
-    if (printers.isEmpty()) {
-        QSettings settings("WFWestHS", "OilStickerApp");
-        bool isKeyTag = (labelStyle == "KEYTAG");
-        QString settingsKey = isKeyTag
-            ? "keytagPrinterName"
-            : "printerName";
-        QString storedIP = settings.value(settingsKey, "").toString();
-        bool ok = false;
-        QString ip = QInputDialog::getText(
-            this,
-            isKeyTag ? "Enter Keytag Printer IP" : "Enter Label Printer IP",
-            "No printers detected. Enter printer IP or hostname:",
-            QLineEdit::Normal,
-            storedIP,
-            &ok
-        );
-
-        if (ok && !ip.isEmpty()) {
-            if (isKeyTag) {
-                keytagPrinterName = ip;
-            } else {
-                printerName = ip;
-            }
-
-            settings.setValue(settingsKey, ip);
-        }
-
-        return;  // important: stop further printer selection logic
-    }
-
-
-    QString preselectedPrinter =
-    (labelStyle == "KEYTAG")
-        ? keytagPrinterName
-        : printerName;
-
-    int currentIndex = printers.indexOf(preselectedPrinter);
-    if (currentIndex < 0)
-        currentIndex = 0;
-
-
-    bool ok;
-    QString printer = QInputDialog::getItem(
+    QSettings settings("WFWestHS", "OilStickerApp");
+    bool isKeyTag = (labelStyle == "KEYTAG");
+    QString settingsKey = isKeyTag
+        ? "keytagPrinterName"
+        : "printerName";
+    QString storedIP = settings.value(settingsKey, "").toString();
+    bool ok = false;
+    QString ip = QInputDialog::getText(
         this,
-        "Select Printer",
-        labelStyle == "KEYTAG"
-        ? "Select Keytag Printer:"
-        : "Select Default Label Printer:",
-        printers,
-        currentIndex,
-        false,
+        isKeyTag ? "Enter Keytag Printer IP" : "Enter Label Printer IP",
+        "Enter printer IP address:",
+        QLineEdit::Normal,
+        storedIP,
         &ok
     );
 
-    QSettings settings("WFWestHS", "OilStickerApp");
-    if (ok && !printer.isEmpty()) {
-    if (labelStyle == "KEYTAG") {
-        keytagPrinterName = printer;
-        settings.setValue("keytagPrinterName", printer);
-    } else {
-        printerName = printer;
-        settings.setValue("printerName", printer);
-    }
-    }
+    if (ok && !ip.isEmpty()) {
+        if (isKeyTag) {
+            keytagPrinterName = ip;
+        } else {
+            printerName = ip;
+        }
 
+        settings.setValue(settingsKey, ip);
+    }
 }
 
 //
@@ -847,61 +769,32 @@ void OilLabelGUI::sendZplToPrinter(const QString &zpl, const QString &printer)
         return;
     }
 
-    if (!useIppPrinting) {
-        // -----------------------------
-        // CUPS / lpr path (macOS, Linux)
-        // -----------------------------
-        QProcess lp;
-        QStringList args;
-        args << "-P" << printer << "-o" << "raw";
+    // Raw ZPL over a direct TCP socket to port 9100 (standard printer
+    // raw-data port), used on all platforms.
+    QTcpSocket socket;
+    socket.connectToHost(printer, 9100);
 
-        lp.start("lpr", args);
-        lp.write(zpl.toUtf8());
-        lp.closeWriteChannel();
-
-        if (!lp.waitForFinished(3000)) {
-            QMessageBox::warning(this, "Print Error",
-                                 "lpr did not finish sending the job.");
-        }
-
-    } else {
-        // -----------------------------
-        // IPP / HTTP path (Windows)
-        // -----------------------------
-        QNetworkAccessManager *networkManager =
-            new QNetworkAccessManager(this);
-
-        // NOTE:
-        // Port 9100 is *RAW socket*, not IPP.
-        // Zebra IPP is usually :631/ipp/print
-        QUrl printerUrl(
-            QString("http://%1:9100/ipp/print").arg(printer)
+    if (!socket.waitForConnected(3000)) {
+        QMessageBox::warning(
+            this, "Print Error",
+            QString("Could not connect to printer:\n%1")
+                .arg(socket.errorString())
         );
-
-        QNetworkRequest request(printerUrl);
-        request.setHeader(
-            QNetworkRequest::ContentTypeHeader,
-            "application/ipp"
-        );
-
-        QNetworkReply *reply =
-            networkManager->post(request, zpl.toUtf8());
-
-        connect(reply, &QNetworkReply::finished, this,
-            [this, reply]() {
-                if (reply->error() == QNetworkReply::NoError) {
-                    QMessageBox::information(
-                        this, "Printed",
-                        "Label sent to printer successfully."
-                    );
-                } else {
-                    QMessageBox::warning(
-                        this, "Print Error",
-                        QString("Failed to send label:\n%1")
-                            .arg(reply->errorString())
-                    );
-                }
-                reply->deleteLater();
-            });
+        return;
     }
+
+    socket.write(zpl.toUtf8());
+
+    if (!socket.waitForBytesWritten(3000)) {
+        QMessageBox::warning(
+            this, "Print Error",
+            QString("Failed to send label:\n%1")
+                .arg(socket.errorString())
+        );
+        return;
+    }
+
+    socket.disconnectFromHost();
+    if (socket.state() != QAbstractSocket::UnconnectedState)
+        socket.waitForDisconnected(1000);
 }

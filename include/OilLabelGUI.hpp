@@ -69,7 +69,6 @@ private:
     QString backgroundPath;          // stores selected background PNG
     QString templateName;            // stores template name (DEFAULT.ZPL / KEYTAG.ZPL)
     int defaultMiles;
-    bool useIppPrinting = false;
     QString keytagPrinterName;
     void sendZplToPrinter(const QString &zpl, const QString &printer);
 };
