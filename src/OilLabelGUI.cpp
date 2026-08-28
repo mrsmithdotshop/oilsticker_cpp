@@ -37,6 +37,13 @@ OilLabelGUI::OilLabelGUI(QWidget *parent)
 {
     setWindowTitle("Service Label Generator");
 
+    // Explicit gray window background (classic macOS control background),
+    // independent of system light/dark appearance or Qt style defaults.
+    setAutoFillBackground(true);
+    QPalette pal = palette();
+    pal.setColor(QPalette::Window, QColor(236, 236, 236));
+    setPalette(pal);
+
     // -----------------------------
     // Load settings
     // -----------------------------
